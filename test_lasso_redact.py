@@ -56,6 +56,19 @@ class TestLassoReduction(unittest.TestCase):
                 self.assertNotIn("SuperSecretP@ssw0rd!", content)
                 self.assertNotIn("BarmanVaultPass987!", content)
 
+    def test_tarball_creation_and_redaction(self):
+        from lasso_redact import create_mock_bundle_tarball
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            raw_tar = Path(tmp_dir) / "raw.tar.gz"
+            out_tar = Path(tmp_dir) / "sanitized.tar.gz"
+
+            create_mock_bundle_tarball(Path("mock_lasso_bundle"), raw_tar)
+            self.assertTrue(raw_tar.exists())
+
+            manifest = self.engine.redact_tarball(raw_tar, out_tar)
+            self.assertTrue(out_tar.exists())
+            self.assertGreater(manifest["total_redactions"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

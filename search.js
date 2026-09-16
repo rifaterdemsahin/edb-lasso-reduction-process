@@ -2,6 +2,13 @@
 
 const SEARCH_INDEX = [
   {
+    title: "Create EDB Lasso Tarball (CLI & UI Guide)",
+    category: "Guide",
+    url: "create-lasso-tarball.html",
+    description: "How to generate EDB Lasso .tar.gz diagnostic bundle from CLI and UI, expectations, and gotchas.",
+    keywords: ["create", "tarball", "tar.gz", "generate", "lasso cli", "expectations", "gotchas", "bloat", "permissions", "offline", "bundle"]
+  },
+  {
     title: "Stage 01: Ingestion & Unpack",
     category: "Stages",
     url: "stage-01-ingestion-unpack.html",

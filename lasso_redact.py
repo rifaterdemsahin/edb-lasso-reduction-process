@@ -231,14 +231,36 @@ class LassoReductionEngine:
         }
 
 
+def create_mock_bundle_tarball(source_dir: Path, output_tar: Path) -> Path:
+    """Helper to pack a mock or existing diagnostic directory into a .tar.gz bundle."""
+    output_tar.parent.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(output_tar, "w:gz") as tar:
+        for item in source_dir.iterdir():
+            tar.add(item, arcname=item.name)
+    return output_tar
+
+
 def main():
     parser = argparse.ArgumentParser(description="EDB Lasso Diagnostic Reduction PoC")
-    parser.add_argument("-i", "--input", required=True, help="Input directory or tar.gz bundle from EDB Lasso")
-    parser.add_argument("-o", "--output", required=True, help="Output destination for sanitized bundle")
+    parser.add_argument("-i", "--input", help="Input directory or tar.gz bundle from EDB Lasso")
+    parser.add_argument("-o", "--output", help="Output destination for sanitized bundle")
     parser.add_argument("--no-pseudo-ip", action="store_true", help="Disable deterministic IP pseudonymization")
     parser.add_argument("--audit-only", action="store_true", help="Audit mode without writing files")
+    parser.add_argument("--create-mock-tarball", help="Create a mock .tar.gz archive from mock_lasso_bundle to test tarball reduction")
 
     args = parser.parse_args()
+
+    if args.create_mock_tarball:
+        src = Path("mock_lasso_bundle")
+        dest = Path(args.create_mock_tarball)
+        print(f"[*] Packaging mock diagnostic bundle into: {dest}")
+        create_mock_bundle_tarball(src, dest)
+        print(f"[+] Created mock EDB Lasso tarball successfully: {dest} ({dest.stat().st_size} bytes)")
+        return
+
+    if not args.input or not args.output:
+        parser.error("-i/--input and -o/--output are required unless --create-mock-tarball is specified.")
+
     engine = LassoReductionEngine(pseudonymize_ips=not args.no_pseudo_ip)
     input_path = Path(args.input)
     output_path = Path(args.output)

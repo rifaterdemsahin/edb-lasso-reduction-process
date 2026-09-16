@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create EDB Lasso Tarball | CLI &amp; UI Guide, Expectations &amp; Best Practices</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white flex flex-col">
+
+  <!-- Shared Navigation Bar with Search -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Top Search Bar in Navigation -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search stages, rules, secrets... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <a href="create-lasso-tarball.html" class="px-3 py-1.5 rounded-lg bg-edb/20 text-cyan-300 border border-edb/40 transition flex items-center space-x-1.5 font-semibold">
+          <i class="fa-solid fa-box-archive text-cyan-400"></i>
+          <span class="hidden sm:inline">Create Tarball</span>
+        </a>
+
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span class="hidden sm:inline">Comparison</span>
+        </a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Hero Header -->
+  <main class="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+    <div class="border-b border-slate-800 pb-8 mb-10">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-3">
+        <i class="fa-solid fa-box-archive"></i>
+        <span>Diagnostic Generation Guide</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Create EDB Lasso Tarball (<code class="text-cyan-400">.tar.gz</code>)
+      </h1>
+      <p class="text-base sm:text-lg text-slate-300 mt-2 max-w-3xl">
+        Learn how to generate the standardized PostgreSQL diagnostic report from both the <strong>CLI</strong> and the <strong>UI</strong>, understand what to expect, and discover the critical security gotchas to watch out for before sharing.
+      </p>
+    </div>
+
+    <!-- Section 1 & 2: How to do it (CLI vs UI) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <!-- CLI Instructions -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-terminal"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-white">How to Do It From the CLI</h2>
+                <span class="text-xs text-slate-400">Command-line syntax &amp; flags</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-1 rounded bg-slate-800 text-cyan-300 border border-slate-700">Terminal</span>
+          </div>
+
+          <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+            Execute <code class="text-cyan-300">lasso</code> as the <code class="text-cyan-300">postgres</code> or system superuser. We strongly recommend generating the archive <strong>offline</strong> with <code class="text-amber-300">--no-upload</code> so it can be reduced before dispatching.
+          </p>
+
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between items-center text-[11px] font-mono text-slate-400 mb-1">
+                <span>1. Recommended Offline Diagnostic Collection:</span>
+              </div>
+              <pre class="bg-slate-950 p-3 rounded-xl font-mono text-xs text-cyan-300 border border-slate-800 overflow-x-auto"><code>sudo -u postgres lasso \
+  -U postgres \
+  -d postgres \
+  --no-upload \
+  -o /var/tmp/edb_lasso_report.tar.gz</code></pre>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-[11px] font-mono text-slate-400 mb-1">
+                <span>2. Targeted Scope (Avoid Large Logs):</span>
+              </div>
+              <pre class="bg-slate-950 p-3 rounded-xl font-mono text-xs text-cyan-300 border border-slate-800 overflow-x-auto"><code>sudo -u postgres lasso \
+  -U postgres -d postgres \
+  --days 2 \
+  -o /tmp/edb_lasso_recent.tar.gz</code></pre>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center text-[11px] font-mono text-slate-400 mb-1">
+                <span>3. Using PoC Mock Bundle Generator:</span>
+              </div>
+              <pre class="bg-slate-950 p-3 rounded-xl font-mono text-xs text-emerald-300 border border-slate-800 overflow-x-auto"><code>python3 lasso_redact.py \
+  --create-mock-tarball mock_lasso_bundle.tar.gz</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400 flex items-center space-x-2">
+          <i class="fa-solid fa-circle-info text-cyan-400"></i>
+          <span>Requires <code class="text-slate-300">pg_read_all_settings</code> or superuser privileges.</span>
+        </div>
+      </div>
+
+      <!-- UI Generator & Interactive Configurator -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-sliders"></i>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-white">How to Do It From the UI</h2>
+                <span class="text-xs text-slate-400">Interactive Tarball Configurator</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-1 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Interactive</span>
+          </div>
+
+          <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+            Select the diagnostic modules you wish to collect. The generator produces the exact CLI command and lets you simulate and download a mock tarball:
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 mb-4 text-xs text-slate-300">
+            <label class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700">
+              <input type="checkbox" id="modPg" checked class="rounded text-edb focus:ring-edb bg-slate-900" />
+              <span>PostgreSQL Engine</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700">
+              <input type="checkbox" id="modOs" checked class="rounded text-edb focus:ring-edb bg-slate-900" />
+              <span>OS Metrics &amp; Sysctl</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700">
+              <input type="checkbox" id="modBarman" checked class="rounded text-edb focus:ring-edb bg-slate-900" />
+              <span>Barman Backups</span>
+            </label>
+            <label class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:border-slate-700">
+              <input type="checkbox" id="modRepmgr" checked class="rounded text-edb focus:ring-edb bg-slate-900" />
+              <span>repmgr / EFM Cluster</span>
+            </label>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-xs font-mono text-slate-400 mb-1">Generated Execution Command:</label>
+            <div id="dynamicCmd" class="bg-slate-950 p-3 rounded-xl font-mono text-xs text-indigo-300 border border-slate-800 overflow-x-auto whitespace-pre"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 mt-4 pt-4 border-t border-slate-800">
+          <button id="copyCmdBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
+            <i class="fa-regular fa-copy"></i>
+            <span>Copy Command</span>
+          </button>
+          <a href="mock_lasso_bundle.tar.gz" download class="px-4 py-2 bg-edb hover:bg-edb-dark text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-lg shadow-edb/30">
+            <i class="fa-solid fa-download"></i>
+            <span>Download Sample Tarball (.tar.gz)</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: What to Expect (Setting Expectations) -->
+    <div class="mb-12">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+          <i class="fa-solid fa-gauge-high"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-white">What to Expect When Creating the Tarball</h2>
+          <p class="text-xs text-slate-400">Clear expectations regarding performance, outputs, and runtime</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="text-emerald-400 text-xl mb-2"><i class="fa-solid fa-file-zipper"></i></div>
+          <h3 class="font-bold text-white text-sm mb-1">1. Archive Structure</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Produces a single <code class="text-cyan-300">.tar.gz</code> archive containing structured subdirectories: <code class="text-slate-300">system/</code>, <code class="text-slate-300">postgresql/</code>, <code class="text-slate-300">barman/</code>, and <code class="text-slate-300">metadata.json</code>.
+          </p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="text-cyan-400 text-xl mb-2"><i class="fa-solid fa-stopwatch"></i></div>
+          <h3 class="font-bold text-white text-sm mb-1">2. Runtime Duration</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Typically takes between <strong>30 seconds and 3 minutes</strong> depending on disk I/O and how many historical log files are included in the scope.
+          </p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="text-purple-400 text-xl mb-2"><i class="fa-solid fa-hard-drive"></i></div>
+          <h3 class="font-bold text-white text-sm mb-1">3. File Size Range</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Standard bundles range from <strong>5 MB to 35 MB</strong>. If unrotated PostgreSQL log files are bundled without range filters, size can expand drastically.
+          </p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="text-amber-400 text-xl mb-2"><i class="fa-solid fa-feather"></i></div>
+          <h3 class="font-bold text-white text-sm mb-1">4. Workload Overhead</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            <strong>Near-zero production impact</strong>. Lasso uses lock-free system catalog queries, zero user table scans, and runs at low CPU priority.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: What to Care About & Watch Out For (Gotchas & Best Practices) -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 mb-12">
+      <div class="flex items-center space-x-3 mb-6">
+        <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-white">What to Care About &amp; Watch Out For (Crucial Gotchas)</h2>
+          <p class="text-xs text-slate-400">Avoid common security pitfalls and operational failures</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Gotcha 1 -->
+        <div class="p-5 rounded-xl bg-slate-950 border border-rose-500/30">
+          <div class="flex items-center space-x-2 text-rose-400 font-bold text-sm mb-2">
+            <i class="fa-solid fa-key"></i>
+            <span>1. Raw Secrets are Captured Verbatim!</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Lasso copies <code class="text-rose-300">postgresql.conf</code>, <code class="text-rose-300">pg_hba.conf</code>, and <code class="text-rose-300">barman.conf</code> verbatim. Plaintext passwords in <code class="text-rose-300">primary_conninfo</code>, Barman backup passwords, and MD5 hashes <strong>will be inside the raw tarball</strong>.
+          </p>
+          <div class="mt-3 p-2.5 rounded bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-300 font-semibold flex items-center space-x-2">
+            <i class="fa-solid fa-shield"></i>
+            <span>Always run the Reduction Process before sending to any external party!</span>
+          </div>
+        </div>
+
+        <!-- Gotcha 2 -->
+        <div class="p-5 rounded-xl bg-slate-950 border border-amber-500/30">
+          <div class="flex items-center space-x-2 text-amber-400 font-bold text-sm mb-2">
+            <i class="fa-solid fa-box"></i>
+            <span>2. Dangerous Log File Bloat</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            If your cluster generates 20 GB of logs per day and log rotation is disabled, Lasso might attempt to archive the entire log directory, filling up <code class="text-amber-300">/tmp</code> and crashing the collector.
+          </p>
+          <div class="mt-3 p-2.5 rounded bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 font-mono">
+            Always specify: --days 2 or --scope recent
+          </div>
+        </div>
+
+        <!-- Gotcha 3 -->
+        <div class="p-5 rounded-xl bg-slate-950 border border-slate-800">
+          <div class="flex items-center space-x-2 text-cyan-400 font-bold text-sm mb-2">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>3. Privilege Denials &amp; Incomplete Dumps</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Running Lasso as a standard OS user without root or postgres sudo rights causes silent omissions: <code class="text-slate-300">/proc</code> metrics, sysctl settings, and PostgreSQL catalog queries will be blank.
+          </p>
+          <div class="mt-3 p-2.5 rounded bg-slate-900 border border-slate-800 text-[11px] text-cyan-300 font-mono">
+            Always run with: sudo -u postgres lasso ...
+          </div>
+        </div>
+
+        <!-- Gotcha 4 -->
+        <div class="p-5 rounded-xl bg-slate-950 border border-slate-800">
+          <div class="flex items-center space-x-2 text-indigo-400 font-bold text-sm mb-2">
+            <i class="fa-solid fa-network-wired"></i>
+            <span>4. Egress Firewall Blocks</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            In locked-down banking or healthcare networks, outbound HTTPS (port 443) to external support endpoints is typically blocked, causing <code class="text-slate-300">--upload</code> to timeout. Use offline tarball generation and sanitize first.
+          </p>
+          <div class="mt-3 p-2.5 rounded bg-slate-900 border border-slate-800 text-[11px] text-indigo-300 font-mono">
+            Offline flag: --no-upload -o /var/tmp/bundle.tar.gz
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: Next Step: Reduction Workflow Call-to-Action -->
+    <div class="bg-gradient-to-r from-edb-dark/40 via-slate-900 to-cyan-950/40 border border-cyan-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div>
+        <div class="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-semibold mb-2">
+          <i class="fa-solid fa-arrow-right"></i>
+          <span>Next Step</span>
+        </div>
+        <h3 class="text-xl font-bold text-white">Sanitize Your Lasso Tarball</h3>
+        <p class="text-xs text-slate-300 mt-1 max-w-xl">
+          Now that your raw diagnostic tarball is created, execute the Reduction Process to strip credentials, pseudonymize IPs, and generate an audit manifest before sharing.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <a href="stage-01-ingestion-unpack.html" class="px-4 py-2.5 bg-edb hover:bg-edb-dark text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-lg shadow-edb/30">
+          <span>Start Reduction Process</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <a href="comparison.html" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition">
+          <span>View Comparison</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-850 text-slate-500 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>EDB Lasso Reduction Process • Tarball Creation Guide &amp; Configurator</div>
+      <div class="flex space-x-6">
+        <a href="index.html" class="hover:text-slate-300">Home</a>
+        <a href="comparison.html" class="hover:text-slate-300">Comparison</a>
+        <a href="stage-01-ingestion-unpack.html" class="hover:text-slate-300">Stages</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="search.js"></script>
+  <script>
+    const modPg = document.getElementById('modPg');
+    const modOs = document.getElementById('modOs');
+    const modBarman = document.getElementById('modBarman');
+    const modRepmgr = document.getElementById('modRepmgr');
+    const dynamicCmd = document.getElementById('dynamicCmd');
+    const copyCmdBtn = document.getElementById('copyCmdBtn');
+
+    function updateDynamicCmd() {
+      let flags = ['sudo -u postgres lasso'];
+      flags.push('-U postgres -d postgres');
+
+      if (!modPg.checked) flags.push('--no-postgres');
+      if (!modOs.checked) flags.push('--no-system');
+      if (modBarman.checked) flags.push('--barman-home /var/lib/barman');
+      if (modRepmgr.checked) flags.push('--include-repmgr');
+
+      flags.push('--no-upload');
+      flags.push('-o /var/tmp/edb_lasso_diagnostic.tar.gz');
+
+      dynamicCmd.textContent = flags.join(' \\\n  ');
+    }
+
+    [modPg, modOs, modBarman, modRepmgr].forEach(el => {
+      el.addEventListener('change', updateDynamicCmd);
+    });
+
+    copyCmdBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(dynamicCmd.textContent);
+      copyCmdBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i><span>Copied!</span>';
+      setTimeout(() => {
+        copyCmdBtn.innerHTML = '<i class="fa-regular fa-copy"></i><span>Copy Command</span>';
+      }, 2000);
+    });
+
+    updateDynamicCmd();
+  </script>
+</body>
+</html>

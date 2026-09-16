@@ -82,6 +82,39 @@ The **EDB Lasso Reduction Process** provides an automated, deterministic sanitiz
 ### 🔍 Side-by-Side Comparison Tool
 Visit the dedicated [Side-by-Side Comparison Page](comparison.html) to view side-by-side split diffs of raw Lasso configs vs. sanitized outputs with highlighted secrets.
 
+---
+
+## 📦 Creating the EDB Lasso Tarball (`.tar.gz`)
+
+For complete details, visit the interactive guide at [Create EDB Lasso Tarball](create-lasso-tarball.html).
+
+### 1. From the CLI
+```bash
+# Recommended: Run offline so bundle can be reduced before sharing
+sudo -u postgres lasso \
+  -U postgres \
+  -d postgres \
+  --no-upload \
+  -o /var/tmp/edb_lasso_$(hostname)_$(date +%Y%m%d).tar.gz
+
+# Targeted scope (avoid log bloat)
+sudo -u postgres lasso -U postgres -d postgres --days 2 -o /tmp/edb_lasso_recent.tar.gz
+
+# Pack mock bundle using the PoC engine
+python3 lasso_redact.py --create-mock-tarball mock_lasso_bundle.tar.gz
+```
+
+### 2. What to Expect
+* **Archive Format**: Standard `.tar.gz` with subdirectories `system/`, `postgresql/`, `barman/`, and `metadata.json`.
+* **Runtime Duration**: 30 seconds to 3 minutes depending on I/O.
+* **File Size**: Typically 5 MB to 35 MB compressed.
+* **Workload Impact**: Near-zero overhead. Lock-free queries, zero customer table rows extracted.
+
+### 3. What to Care About & Watch Out For (Gotchas)
+* ⚠️ **Raw Secret Exposure**: Lasso copies `postgresql.conf` and `barman.conf` verbatim. Plaintext replication passwords (`primary_conninfo`) and backup keys **are stored in the raw archive**!
+* ⚠️ **Log File Bloat**: Unrotated log directories can expand the bundle to tens of gigabytes; always specify `--days 2`.
+* ⚠️ **Sudo & Catalog Permissions**: Running as a normal user will cause blank metrics; run with `sudo -u postgres`.
+* ⚠️ **Network Egress**: Port 443 firewall restrictions will cause `--upload` to hang; collect offline and sanitize locally first.
 
 ---
 

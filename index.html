@@ -65,6 +65,11 @@
       </div>
 
       <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <a href="create-lasso-tarball.html" class="px-3 py-1.5 rounded-lg bg-edb/20 text-cyan-300 border border-edb/40 transition flex items-center space-x-1.5 font-semibold">
+          <i class="fa-solid fa-box-archive text-cyan-400"></i>
+          <span class="hidden sm:inline">Create Tarball</span>
+        </a>
+
         <div class="relative group">
           <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700 hover:bg-slate-700 transition">
             <span>Stages</span>
@@ -209,7 +214,116 @@
     </div>
   </section>
 
-  <!-- The Reduction & Redaction Architecture -->
+  <!-- Create EDB Lasso Tarball Section (CLI & UI Guide, Expectations & Gotchas) -->
+  <section id="create-tarball" class="py-16 bg-slate-900/70 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-4">
+        <div>
+          <span class="text-edb-light font-semibold uppercase tracking-wider text-xs">Diagnostic Ingestion Guide</span>
+          <h2 class="text-3xl font-bold text-white mt-1">Creating the EDB Lasso Tarball (<code class="text-cyan-400">.tar.gz</code>)</h2>
+          <p class="text-slate-400 text-sm mt-2 max-w-2xl">
+            Learn how to bundle your PostgreSQL and operating system diagnostics from the CLI or UI, set expectations for size and runtime, and avoid critical security leaks.
+          </p>
+        </div>
+        <div>
+          <a href="create-lasso-tarball.html" class="px-5 py-2.5 bg-edb hover:bg-edb-dark text-white rounded-xl text-xs font-semibold transition flex items-center space-x-2 shadow-lg shadow-edb/30">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Full Tarball Guide &amp; Configurator</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- 3-Column Highlights -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Col 1: CLI vs UI -->
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-terminal"></i>
+              </div>
+              <h3 class="font-bold text-white text-base">CLI &amp; UI Generation</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed mb-3">
+              Run offline via CLI to create an unuploaded tarball:
+            </p>
+            <pre class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-cyan-300 border border-slate-800 mb-3 overflow-x-auto"><code>sudo -u postgres lasso \
+  -U postgres -d postgres \
+  --no-upload -o /var/tmp/edb_lasso.tar.gz</code></pre>
+            <p class="text-[11px] text-slate-400">
+              Or use our browser configurator to pick modules and download a mock bundle.
+            </p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-cyan-400 font-semibold">
+            <a href="create-lasso-tarball.html" class="hover:underline">Explore CLI options &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Col 2: What to Expect -->
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-gauge-high"></i>
+              </div>
+              <h3 class="font-bold text-white text-base">What to Expect</h3>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                <span><strong>Size:</strong> Typically 5 MB – 35 MB compressed.</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                <span><strong>Duration:</strong> 30 seconds to 3 minutes runtime.</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                <span><strong>Overhead:</strong> Zero locks, low priority queries, negligible CPU footprint.</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                <span><strong>Data Safety:</strong> Never touches customer table rows.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-emerald-400 font-semibold">
+            <a href="create-lasso-tarball.html" class="hover:underline">View structure breakdown &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Col 3: What to Care About -->
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <h3 class="font-bold text-white text-base">What to Care About</h3>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400 mt-0.5"></i>
+                <span><strong>Credential Leak Risk:</strong> Plaintext passwords in <code class="text-rose-300">postgresql.conf</code> are copied verbatim!</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5"></i>
+                <span><strong>Log Bloat:</strong> Use <code class="text-amber-300">--days 2</code> to prevent multi-gigabyte unrotated log dumps.</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <i class="fa-solid fa-triangle-exclamation text-indigo-400 mt-0.5"></i>
+                <span><strong>Firewall Blockers:</strong> Port 443 egress blocks make direct portal upload fail.</span>
+              </li>
+            </ul>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-rose-400 font-semibold">
+            <a href="stage-01-ingestion-unpack.html" class="hover:underline">Sanitize with Reduction Engine &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   <section id="reduction-pipeline" class="py-16 bg-slate-900/50 border-b border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-3xl mx-auto mb-12">
