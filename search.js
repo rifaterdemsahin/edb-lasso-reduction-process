@@ -2,6 +2,13 @@
 
 const SEARCH_INDEX = [
   {
+    title: "Architecture & Excalidraw Mind Map",
+    category: "Architecture",
+    url: "architecture.html",
+    description: "Visual mind map and enterprise debugging session lifecycle between DB teams and EDB Support.",
+    keywords: ["architecture", "excalidraw", "mind map", "diagram", "lifecycle", "enterprise debugging", "rca", "session", "edb support", "flow"]
+  },
+  {
     title: "Create EDB Lasso Tarball (CLI & UI Guide)",
     category: "Guide",
     url: "create-lasso-tarball.html",

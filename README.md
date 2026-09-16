@@ -49,6 +49,20 @@ While EDB Lasso guarantees zero user data extraction from tables, configuration 
 
 The **EDB Lasso Reduction Process** provides an automated, deterministic sanitization pipeline before uploading or sharing diagnostic bundles.
 
+## 🧠 Architecture & Enterprise Debugging Lifecycle
+
+Explore the full interactive architecture page and diagram at **[Architecture & Debugging Flow](architecture.html)**.
+Download the raw diagram: **[`architecture-mindmap.excalidraw`](architecture-mindmap.excalidraw)** (openable on [Excalidraw](https://excalidraw.com)).
+
+### What Happens During an Enterprise Debugging Session with EDB:
+1. **Production Incident Trigger**: Monitoring alerts on replication lag, failover flapping in EFM, or query throttling. Severity 1 triage declared.
+2. **Diagnostic Capture via EDB Lasso**: DBA runs `sudo -u postgres lasso --no-upload` to extract lock-free metrics from PostgreSQL, OS sysctl, and Barman without touching table rows.
+3. **Lasso Reduction Process**: Passwords in `primary_conninfo`, MD5/SCRAM hashes, and customer tokens are stripped. Internal IPs are deterministically mapped to `PSEUDO_IP_NODE_xx` aliases.
+4. **SecOps & Infosec Clearance**: The cryptographic `lasso_reduction_manifest.json` is reviewed, verifying zero credential or topology leakage.
+5. **EDB Support Portal Intake**: The sanitized `.tar.gz` bundle is uploaded to the EDB Support case ticket, starting the SLA response clock.
+6. **Collaborative Root Cause Analysis (RCA)**: EDB engineers analyze standardized telemetry without iterative log ping-pong, correlating OS I/O spikes with WAL generation.
+7. **Remediation & Patching**: Production parameter adjustments applied, verified, and post-mortem documented.
+
 ---
 
 ## ⚙️ Architecture & Features

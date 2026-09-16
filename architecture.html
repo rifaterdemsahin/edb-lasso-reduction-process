@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture &amp; Enterprise Debugging Flow | EDB Lasso Reduction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .mindmap-connector {
+      stroke: #334155;
+      stroke-dasharray: 4 4;
+      stroke-width: 2;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white flex flex-col">
+
+  <!-- Shared Navigation Bar with Search -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Top Search Bar in Navigation -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search architecture, mind map, workflow... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <a href="architecture.html" class="px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition flex items-center space-x-1.5 font-semibold">
+          <i class="fa-solid fa-diagram-project text-indigo-400"></i>
+          <span class="hidden sm:inline">Architecture</span>
+        </a>
+
+        <a href="create-lasso-tarball.html" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-box-archive text-cyan-400"></i>
+          <span class="hidden sm:inline">Create Tarball</span>
+        </a>
+
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span class="hidden sm:inline">Comparison</span>
+        </a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Hero Header -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+    <div class="border-b border-slate-800 pb-8 mb-10">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-3">
+        <i class="fa-solid fa-brain"></i>
+        <span>Excalidraw Architecture &amp; Lifecycle</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+        Enterprise Debugging Session Architecture
+      </h1>
+      <p class="text-base sm:text-lg text-slate-300 mt-2 max-w-3xl leading-relaxed">
+        An end-to-end visual mind map and operational lifecycle showing how an <strong>Enterprise Database Team</strong> collaborates with <strong>EnterpriseDB (EDB) Support</strong> to resolve critical database incidents quickly, safely, and with zero secret exposure.
+      </p>
+    </div>
+
+    <!-- Excalidraw Mind Map Viewer Section -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 lg:p-8 mb-12 shadow-2xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-indigo-400 animate-ping"></span>
+            <h2 class="text-xl font-bold text-white">Excalidraw Mind Map: The Enterprise Debugging Flow</h2>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Interactive hand-drawn architecture visualization depicting the 7 stages of collaborative incident resolution.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <a href="architecture-mindmap.excalidraw" download="architecture-mindmap.excalidraw" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-2 shadow-lg shadow-indigo-900/30">
+            <i class="fa-solid fa-download"></i>
+            <span>Download .excalidraw</span>
+          </a>
+          <a href="https://excalidraw.com" target="_blank" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 border border-slate-700">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>Open in Excalidraw</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- SVG Mind Map Canvas -->
+      <div class="w-full bg-slate-950 border border-slate-800/80 rounded-2xl p-4 overflow-x-auto">
+        <svg viewBox="0 0 1250 560" class="w-full min-w-[950px] h-auto font-sans" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background Grid Pattern -->
+          <defs>
+            <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(51, 65, 85, 0.2)" stroke-width="1"/>
+            </pattern>
+            <linearGradient id="rootGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#004c7d"/>
+              <stop offset="100%" stop-color="#0284c7"/>
+            </linearGradient>
+            <linearGradient id="phaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+
+          <!-- Connecting Arrows / Paths -->
+          <!-- Root to Stage 1 -->
+          <path d="M 450 85 C 200 85, 170 140, 170 200" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>
+          <!-- Stage 1 to Stage 2 -->
+          <path d="M 290 245 L 340 245" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+          <!-- Stage 2 to Stage 3 -->
+          <path d="M 590 245 L 640 245" fill="none" stroke="#64748b" stroke-width="2"/>
+          <!-- Stage 3 to Stage 4 -->
+          <path d="M 890 245 L 940 245" fill="none" stroke="#64748b" stroke-width="2"/>
+          <!-- Stage 4 down to Stage 5 -->
+          <path d="M 1065 290 C 1065 340, 465 340, 465 380" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5,5"/>
+          <!-- Stage 5 to Stage 6 -->
+          <path d="M 590 425 L 640 425" fill="none" stroke="#64748b" stroke-width="2"/>
+          <!-- Stage 6 to Stage 7 -->
+          <path d="M 890 425 L 940 425" fill="none" stroke="#64748b" stroke-width="2"/>
+
+          <!-- Root Header Box -->
+          <rect x="450" y="50" width="350" height="70" rx="16" fill="url(#rootGrad)" stroke="#38bdf8" stroke-width="2" filter="drop-shadow(0 10px 15px rgba(0, 101, 163, 0.4))"/>
+          <text x="625" y="80" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle">ENTERPRISE DEBUGGING LIFECYCLE</text>
+          <text x="625" y="102" fill="#bae6fd" font-size="12" text-anchor="middle">Enterprise DB Team ⟷ EnterpriseDB (EDB) Support</text>
+
+          <!-- Node 1: Alert / Incident -->
+          <g transform="translate(50, 200)">
+            <rect width="240" height="95" rx="14" fill="url(#phaseGrad)" stroke="#ef4444" stroke-width="2"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(239,68,68,0.2)"/>
+            <text x="28" y="33" fill="#f87171" font-size="12" font-weight="bold" text-anchor="middle">1</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">Production Alert / Triage</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• Replication lag / CPU throttling</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Failover flapping (EFM / repmgr)</text>
+            <text x="20" y="84" fill="#f87171" font-size="10">• Severity 1 incident declared</text>
+          </g>
+
+          <!-- Node 2: Lasso Collection -->
+          <g transform="translate(340, 200)">
+            <rect width="250" height="95" rx="14" fill="url(#phaseGrad)" stroke="#0284c7" stroke-width="2"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(2,132,199,0.2)"/>
+            <text x="28" y="33" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">2</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">EDB Lasso Diagnostic Run</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• sudo -u postgres lasso --no-upload</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Zero table row extraction (safe)</text>
+            <text x="20" y="84" fill="#38bdf8" font-size="10">• Gathers OS, Postgres, Barman, EFM</text>
+          </g>
+
+          <!-- Node 3: Lasso Reduction Process -->
+          <g transform="translate(640, 200)">
+            <rect width="250" height="95" rx="14" fill="url(#phaseGrad)" stroke="#f59e0b" stroke-width="2" filter="drop-shadow(0 0 10px rgba(245,158,11,0.2))"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(245,158,11,0.2)"/>
+            <text x="28" y="33" fill="#fbbf24" font-size="12" font-weight="bold" text-anchor="middle">3</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">Lasso Reduction Engine</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• Strip conninfo &amp; plaintext pass</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Mask SCRAM-SHA-256 &amp; MD5 hashes</text>
+            <text x="20" y="84" fill="#fbbf24" font-size="10">• Deterministic IP pseudonymization</text>
+          </g>
+
+          <!-- Node 4: SecOps Approval & Manifest -->
+          <g transform="translate(940, 200)">
+            <rect width="250" height="95" rx="14" fill="url(#phaseGrad)" stroke="#10b981" stroke-width="2"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(16,185,129,0.2)"/>
+            <text x="28" y="33" fill="#34d399" font-size="12" font-weight="bold" text-anchor="middle">4</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">Audit Manifest &amp; Clearance</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• lasso_reduction_manifest.json verified</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Infosec/SecOps clearance granted</text>
+            <text x="20" y="84" fill="#34d399" font-size="10">• Zero customer secret leak guarantee</text>
+          </g>
+
+          <!-- Node 5: EDB Support Intake -->
+          <g transform="translate(340, 380)">
+            <rect width="250" height="95" rx="14" fill="url(#phaseGrad)" stroke="#8b5cf6" stroke-width="2"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(139,92,246,0.2)"/>
+            <text x="28" y="33" fill="#a78bfa" font-size="12" font-weight="bold" text-anchor="middle">5</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">EDB Support Portal Intake</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• Sanitized bundle attached to ticket</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Dedicated EDB Support Engineer paged</text>
+            <text x="20" y="84" fill="#a78bfa" font-size="10">• SLA response clock initiated</text>
+          </g>
+
+          <!-- Node 6: Root Cause Analysis -->
+          <g transform="translate(640, 380)">
+            <rect width="250" height="95" rx="14" fill="url(#phaseGrad)" stroke="#06b6d4" stroke-width="2"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(6,182,212,0.2)"/>
+            <text x="28" y="33" fill="#22d3ee" font-size="12" font-weight="bold" text-anchor="middle">6</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">Collaborative Root Cause (RCA)</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• Holistic correlation (OS + DB + WAL)</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Zero "log ping-pong" delays</text>
+            <text x="20" y="84" fill="#22d3ee" font-size="10">• Topology intact via pseudo nodes</text>
+          </g>
+
+          <!-- Node 7: Remediation & Patching -->
+          <g transform="translate(940, 380)">
+            <rect width="250" height="95" rx="14" fill="url(#phaseGrad)" stroke="#22c55e" stroke-width="2"/>
+            <circle cx="28" cy="28" r="14" fill="rgba(34,197,94,0.2)"/>
+            <text x="28" y="33" fill="#86efac" font-size="12" font-weight="bold" text-anchor="middle">7</text>
+            <text x="50" y="28" fill="#ffffff" font-size="13" font-weight="bold">Production Remediation</text>
+            <text x="20" y="52" fill="#94a3b8" font-size="10">• Config tune / Barman fix / patch applied</text>
+            <text x="20" y="68" fill="#94a3b8" font-size="10">• Incident resolved within enterprise SLA</text>
+            <text x="20" y="84" fill="#86efac" font-size="10">• Post-mortem knowledge base updated</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- What Happens During an Enterprise Debugging Session: Detailed Breakdown -->
+    <div class="mb-12">
+      <div class="max-w-3xl mb-8">
+        <span class="text-edb-light font-semibold uppercase tracking-wider text-xs">Enterprise Lifecycle Breakdown</span>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">What Happens During an Enterprise Debugging Session</h2>
+        <p class="text-slate-400 text-sm mt-2 leading-relaxed">
+          When an enterprise mission-critical database experiences degraded throughput, replication lag, or failover complications, time to resolution directly impacts business operations. Here is how the collaborative session works between the Enterprise Database Team and EnterpriseDB:
+        </p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Stage 1 & 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center text-sm">01</span>
+              <h3 class="font-bold text-white text-base">Incident Trigger &amp; Enterprise Triage</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Monitoring triggers on high query latency, replication lag between primary and standby nodes, or heartbeat failures in EnterpriseDB Failover Manager (EFM). The Lead DBA initiates an emergency triage channel and contacts EDB Mission-Critical Support.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 font-bold flex items-center justify-center text-sm">02</span>
+              <h3 class="font-bold text-white text-base">Diagnostic Extraction via EDB Lasso</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Instead of manually running dozens of ad-hoc SQL queries or copying disparate log files, the DBA runs <code class="text-cyan-300">lasso</code> with <code class="text-amber-300">--no-upload</code>. It takes 60 seconds to lock-free capture OS statistics, database configuration catalogs, Barman status, and recent log samples.
+            </p>
+          </div>
+        </div>
+
+        <!-- Stage 3 & 4 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="p-6 rounded-2xl bg-slate-900 border border-amber-500/30 bg-amber-500/5">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-sm">03</span>
+              <h3 class="font-bold text-white text-base">The Reduction Engine (Zero-Leak Sanitization)</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              <strong>The critical enterprise hurdle:</strong> Infosec regulations (SOC 2, PCI-DSS, HIPAA) forbid sharing diagnostic dumps containing plaintext passwords or private network IPs. The DBA runs <code class="text-amber-300">lasso_redact.py</code>, scrubbing passwords, tokens, and hashes while preserving node topology via deterministic pseudonyms.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900 border border-emerald-500/30 bg-emerald-500/5">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-sm">04</span>
+              <h3 class="font-bold text-white text-base">SecOps Audit &amp; Manifest Clearance</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              The reduction process outputs <code class="text-emerald-300">lasso_reduction_manifest.json</code>. The enterprise security officer reviews the manifest summary (e.g. 21 secrets stripped, 6 IPs mapped) and immediately approves the bundle for external dispatch without security bureaucracy delays.
+            </p>
+          </div>
+        </div>
+
+        <!-- Stage 5, 6 & 7 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center text-sm">05</span>
+              <h3 class="font-bold text-white text-base">EDB Portal Intake</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              The sanitized archive is uploaded to EDB’s Support Portal. The automated intake system indexes the bundle and routes it directly to senior PostgreSQL database support engineers.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 font-bold flex items-center justify-center text-sm">06</span>
+              <h3 class="font-bold text-white text-base">Root Cause Correlation</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              EDB engineers analyze the standardized report. Because cluster topology was preserved (Node 01 connects to Node 02), engineers pinpoint the exact bottleneck (e.g., WAL sender saturation or disk I/O queue spike) without any back-and-forth log ping-pong.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center space-x-3 mb-3">
+              <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-sm">07</span>
+              <h3 class="font-bold text-white text-base">Remediation &amp; Closure</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              EDB provides precise tuning parameters (e.g. adjust <code class="text-cyan-300">max_wal_size</code> or tune Barman archive concurrency). The Enterprise DBA applies the change, verifies cluster health, and closes the ticket within the corporate SLA.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation CTAs -->
+    <div class="bg-gradient-to-r from-edb-dark/40 via-slate-900 to-indigo-950/40 border border-indigo-500/30 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div>
+        <h3 class="text-xl font-bold text-white">Ready to Explore the Steps or Test Reduction?</h3>
+        <p class="text-xs text-slate-300 mt-1 max-w-xl">
+          Walk through the 4 reduction pipeline stages, explore the side-by-side comparison, or test the in-browser reduction sandbox.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <a href="stage-01-ingestion-unpack.html" class="px-4 py-2.5 bg-edb hover:bg-edb-dark text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-lg shadow-edb/30">
+          <span>Stage 01: Ingestion</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </a>
+        <a href="comparison.html" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span>Side-by-Side Comparison</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-850 text-slate-500 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>EDB Lasso Reduction Process • Architecture &amp; Enterprise Debugging Lifecycle</div>
+      <div class="flex space-x-6">
+        <a href="index.html" class="hover:text-slate-300">Home</a>
+        <a href="architecture-mindmap.excalidraw" download class="hover:text-slate-300">Excalidraw File</a>
+        <a href="comparison.html" class="hover:text-slate-300">Comparison</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="search.js"></script>
+</body>
+</html>
