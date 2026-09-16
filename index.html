@@ -42,33 +42,68 @@
 
   <!-- Navigation Bar -->
   <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
-          <i class="fa-solid fa-database"></i>
-        </div>
-        <div>
-          <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-300 bg-clip-text text-transparent">
-            EDB Lasso Reduction Process
-          </span>
-          <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold">
-            PoC & Sanitizer
-          </span>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Top Search Bar in Navigation -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search stages, rules, secrets... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
         </div>
       </div>
-      <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-400">
-        <a href="#about" class="hover:text-white transition">About EDB Lasso</a>
-        <a href="#why-lasso" class="hover:text-white transition">Why Lasso</a>
-        <a href="#reduction-pipeline" class="hover:text-white transition">Reduction Process</a>
-        <a href="#sandbox" class="hover:text-white transition">Interactive Sandbox</a>
-        <a href="#cli-guide" class="hover:text-white transition">CLI PoC</a>
-        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="flex items-center space-x-2 text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-1.5 rounded-lg border border-slate-700 transition">
-          <i class="fa-brands fa-github"></i>
-          <span>GitHub Repo</span>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span>Comparison</span>
+        </a>
+
+        <a href="#sandbox" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition hidden lg:inline">Sandbox</a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
         </a>
       </nav>
     </div>
   </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
 
   <!-- Hero Section -->
   <section class="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-b border-slate-800/80">
@@ -187,33 +222,37 @@
 
       <!-- Pipeline Step Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
-          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 01</span>
+        <a href="stage-01-ingestion-unpack.html" class="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-850 transition relative group block">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500 group-hover:text-cyan-400">STEP 01</span>
           <div class="text-2xl text-cyan-400 mb-3"><i class="fa-solid fa-box-open"></i></div>
-          <h4 class="font-bold text-white mb-2">Ingestion &amp; Unpack</h4>
-          <p class="text-sm text-slate-400">Extracts the EDB Lasso tarball (.tar.gz) or output directory without altering raw file permissions.</p>
-        </div>
+          <h4 class="font-bold text-white mb-2 group-hover:text-cyan-300 transition">Ingestion &amp; Unpack</h4>
+          <p class="text-sm text-slate-400 mb-3">Extracts the EDB Lasso tarball (.tar.gz) or output directory without altering raw file permissions.</p>
+          <span class="text-xs font-semibold text-cyan-400 flex items-center">Learn More <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i></span>
+        </a>
 
-        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
-          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 02</span>
-          <div class="text-2xl text-red-400 mb-3"><i class="fa-solid fa-key"></i></div>
-          <h4 class="font-bold text-white mb-2">Credential Stripping</h4>
-          <p class="text-sm text-slate-400">Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens.</p>
-        </div>
+        <a href="stage-02-credential-stripping.html" class="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-rose-500/50 hover:bg-slate-850 transition relative group block">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500 group-hover:text-rose-400">STEP 02</span>
+          <div class="text-2xl text-rose-400 mb-3"><i class="fa-solid fa-key"></i></div>
+          <h4 class="font-bold text-white mb-2 group-hover:text-rose-300 transition">Credential Stripping</h4>
+          <p class="text-sm text-slate-400 mb-3">Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens.</p>
+          <span class="text-xs font-semibold text-rose-400 flex items-center">Learn More <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i></span>
+        </a>
 
-        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
-          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 03</span>
+        <a href="stage-03-deterministic-ip-mapping.html" class="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-850 transition relative group block">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500 group-hover:text-indigo-400">STEP 03</span>
           <div class="text-2xl text-indigo-400 mb-3"><i class="fa-solid fa-route"></i></div>
-          <h4 class="font-bold text-white mb-2">Deterministic IP Mapping</h4>
-          <p class="text-sm text-slate-400">Maps internal IP addresses (e.g. 10.0.12.45) to consistent aliases (<code class="text-indigo-300 text-xs">PSEUDO_IP_NODE_01</code>) preserving cluster topology.</p>
-        </div>
+          <h4 class="font-bold text-white mb-2 group-hover:text-indigo-300 transition">Deterministic IP Mapping</h4>
+          <p class="text-sm text-slate-400 mb-3">Maps internal IP addresses (e.g. 10.0.12.45) to consistent aliases (<code class="text-indigo-300 text-xs">PSEUDO_IP_NODE_01</code>) preserving cluster topology.</p>
+          <span class="text-xs font-semibold text-indigo-400 flex items-center">Learn More <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i></span>
+        </a>
 
-        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
-          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 04</span>
+        <a href="stage-04-audit-manifest-repack.html" class="p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-850 transition relative group block">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500 group-hover:text-emerald-400">STEP 04</span>
           <div class="text-2xl text-emerald-400 mb-3"><i class="fa-solid fa-file-contract"></i></div>
-          <h4 class="font-bold text-white mb-2">Audit Manifest &amp; Repack</h4>
-          <p class="text-sm text-slate-400">Generates <code class="text-emerald-300 text-xs">lasso_reduction_manifest.json</code> detailing redaction tallies and produces a sanitized archive.</p>
-        </div>
+          <h4 class="font-bold text-white mb-2 group-hover:text-emerald-300 transition">Audit Manifest &amp; Repack</h4>
+          <p class="text-sm text-slate-400 mb-3">Generates <code class="text-emerald-300 text-xs">lasso_reduction_manifest.json</code> detailing redaction tallies and produces a sanitized archive.</p>
+          <span class="text-xs font-semibold text-emerald-400 flex items-center">Learn More <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i></span>
+        </a>
       </div>
     </div>
   </section>
@@ -549,5 +588,6 @@ HOSTNAME=db-node-primary.internal.corporate.local`
       URL.revokeObjectURL(url);
     });
   </script>
+  <script src="search.js"></script>
 </body>
 </html>

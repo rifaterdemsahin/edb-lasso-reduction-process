@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stage 04: Audit Manifest &amp; Repack | EDB Lasso Reduction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white flex flex-col">
+
+  <!-- Navigation Bar with Search -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search stages, rules, secrets... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-cyan-400 font-semibold flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span class="hidden sm:inline">Comparison</span>
+        </a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb -->
+    <div class="flex items-center space-x-2 text-xs font-mono text-slate-400 mb-4">
+      <a href="index.html" class="hover:text-cyan-400">Home</a>
+      <span>/</span>
+      <span>Stages</span>
+      <span>/</span>
+      <span class="text-emerald-400">Stage 04</span>
+    </div>
+
+    <!-- Header -->
+    <div class="border-b border-slate-800 pb-8 mb-8">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-4">
+        <i class="fa-solid fa-file-contract"></i>
+        <span>Pipeline Stage 04 of 04</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">
+        Audit Manifest &amp; Repack
+      </h1>
+      <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+        Generates <code class="text-cyan-300">lasso_reduction_manifest.json</code> detailing exact reduction tallies, rule breakdowns, and node mapping, then archives the sanitized directory into a deployable, compressed <code class="text-cyan-300">.tar.gz</code> ready for support dispatch.
+      </p>
+    </div>
+
+    <!-- Two-column Features -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <!-- Manifest Details -->
+      <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="flex items-center space-x-3 mb-3">
+          <div class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-base">The Audit Trail Manifest</h3>
+            <span class="text-[10px] font-mono text-slate-400">lasso_reduction_manifest.json</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          Every secret detection is logged with its rule ID, file origin, and category. This provides compliance teams (SOC 2, PCI-DSS) verifiable proof that no credentials or private subnets were dispatched externally.
+        </p>
+        <ul class="text-xs text-slate-300 space-y-2 font-mono">
+          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>Total Redactions Count</span></li>
+          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>Category &amp; Rule Tallies</span></li>
+          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>Deterministic IP Mapping Table</span></li>
+          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>SHA-256 Output Integrity Hash</span></li>
+        </ul>
+      </div>
+
+      <!-- Repacking Engine -->
+      <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="flex items-center space-x-3 mb-3">
+          <div class="p-2 rounded-lg bg-cyan-500/20 text-cyan-400">
+            <i class="fa-solid fa-file-zipper"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-white text-base">Safe Gzip Tarball Repacking</h3>
+            <span class="text-[10px] font-mono text-slate-400">edb_lasso_redacted.tar.gz</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed mb-4">
+          The sanitized files are bundled alongside the audit manifest into a standard gzip tarball. The resulting file maintains the exact internal directory hierarchy expected by EDB portal automated intake parsers.
+        </p>
+        <pre class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-cyan-300 border border-slate-800"><code># Repack command executed automatically
+tar -czf lasso_sanitized.tar.gz \
+    -C sanitized_bundle .</code></pre>
+      </div>
+    </div>
+
+    <!-- Sample Manifest View -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-file-code text-emerald-400"></i>
+          <span class="font-bold text-white text-sm">Example Reduction Manifest Output</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono">21 items sanitized</span>
+      </div>
+      <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-emerald-300/90 border border-slate-800 overflow-x-auto"><code>{
+  "title": "EDB Lasso Reduction Manifest",
+  "version": "1.0.0",
+  "total_redactions": 21,
+  "category_breakdown": {
+    "network": 13,
+    "credentials": 6,
+    "api_tokens": 2
+  },
+  "rule_breakdown": {
+    "INTERNAL_IP_MASK": 13,
+    "CONNINFO_PASSWORD": 4,
+    "MD5_PASSWORD": 1,
+    "URI_CREDENTIALS": 1,
+    "EDB_CUSTOMER_TOKEN": 1,
+    "GENERIC_API_KEY": 1
+  },
+  "pseudonymized_ip_count": 6,
+  "ip_mapping_sample": {
+    "10.0.12.45": "PSEUDO_IP_NODE_01",
+    "10.0.12.46": "PSEUDO_IP_NODE_02",
+    "192.168.10.101": "PSEUDO_IP_NODE_03"
+  }
+}</code></pre>
+    </div>
+
+    <!-- Navigation between Stages -->
+    <div class="flex items-center justify-between pt-6 border-t border-slate-800">
+      <a href="stage-03-deterministic-ip-mapping.html" class="flex items-center space-x-2 text-sm text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Previous: Stage 03 - IP Mapping</span>
+      </a>
+      <a href="comparison.html" class="flex items-center space-x-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition">
+        <span>Task 2: Side-by-Side Comparison</span>
+        <i class="fa-solid fa-table-columns"></i>
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-850 text-slate-500 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>EDB Lasso Reduction Process • Stage 04: Audit Manifest &amp; Repack</div>
+      <div class="flex space-x-6">
+        <a href="index.html" class="hover:text-slate-300">Home</a>
+        <a href="comparison.html" class="hover:text-slate-300">Comparison</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="search.js"></script>
+</body>
+</html>

@@ -70,6 +70,21 @@ The **EDB Lasso Reduction Process** provides an automated, deterministic sanitiz
 
 ---
 
+## 📑 Diagnostic Reduction Pipeline Stages
+
+| Stage | Name | Description | Page |
+| :--- | :--- | :--- | :--- |
+| **01** | **Ingestion & Unpack** | Extracts the EDB Lasso tarball (`.tar.gz`) or output directory without altering raw file permissions or leaking intermediate state. | [Stage 01](stage-01-ingestion-unpack.html) |
+| **02** | **Credential Stripping** | Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens. | [Stage 02](stage-02-credential-stripping.html) |
+| **03** | **Deterministic IP Mapping** | Maps internal IP addresses (e.g. `10.0.12.45`) to consistent aliases (`PSEUDO_IP_NODE_01`) preserving cluster topology. | [Stage 03](stage-03-deterministic-ip-mapping.html) |
+| **04** | **Audit Manifest & Repack** | Generates `lasso_reduction_manifest.json` detailing redaction tallies and produces a sanitized archive. | [Stage 04](stage-04-audit-manifest-repack.html) |
+
+### 🔍 Side-by-Side Comparison Tool
+Visit the dedicated [Side-by-Side Comparison Page](comparison.html) to view side-by-side split diffs of raw Lasso configs vs. sanitized outputs with highlighted secrets.
+
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Run Unit & Integration Tests

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stage 01: Ingestion &amp; Unpack | EDB Lasso Reduction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white flex flex-col">
+
+  <!-- Shared Navigation Bar with Search -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Top Search Bar in Navigation -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search stages, rules, secrets... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-cyan-400 font-semibold flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span class="hidden sm:inline">Comparison</span>
+        </a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb & Step Pill -->
+    <div class="flex items-center space-x-2 text-xs font-mono text-slate-400 mb-4">
+      <a href="index.html" class="hover:text-cyan-400">Home</a>
+      <span>/</span>
+      <span>Stages</span>
+      <span>/</span>
+      <span class="text-cyan-400">Stage 01</span>
+    </div>
+
+    <!-- Header -->
+    <div class="border-b border-slate-800 pb-8 mb-8">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-4">
+        <i class="fa-solid fa-box-open"></i>
+        <span>Pipeline Stage 01 of 04</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">
+        Ingestion &amp; Unpack
+      </h1>
+      <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+        Extracts the EDB Lasso tarball (<code class="text-cyan-300">.tar.gz</code>) or target output directory safely without altering raw file permissions or leaking sensitive intermediate data.
+      </p>
+    </div>
+
+    <!-- Stage Deep Dive Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg mb-3">
+          <i class="fa-solid fa-shield-virus"></i>
+        </div>
+        <h3 class="font-bold text-white mb-1.5">Path Traversal Defense</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Protects against "tar bomb" exploits or malicious symlinks by strictly validating archive members remain within isolated temporary directories.
+        </p>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-lg mb-3">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="font-bold text-white mb-1.5">Permission Preservation</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Maintains original UNIX permissions (e.g. <code class="text-indigo-300">0600</code> on pg_hba.conf and SSL certs) throughout memory extraction.
+        </p>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg mb-3">
+          <i class="fa-solid fa-fingerprint"></i>
+        </div>
+        <h3 class="font-bold text-white mb-1.5">SHA-256 Ingestion Seal</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Calculates cryptographic hashes of the raw input bundle to guarantee provenance before sanitization begins.
+        </p>
+      </div>
+    </div>
+
+    <!-- Implementation Code Sample -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-code text-cyan-400"></i>
+          <span class="font-bold text-white text-sm">Safe Ingestion Routine (Python Engine)</span>
+        </div>
+        <span class="text-xs font-mono text-slate-500">lasso_redact.py</span>
+      </div>
+      <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-cyan-300 border border-slate-800 overflow-x-auto leading-relaxed"><code>def redact_tarball(self, tar_path: Path, output_tar_path: Path) -> Dict[str, Any]:
+    """Unpacks, sanitizes, and repacks a Lasso diagnostic .tar.gz bundle."""
+    with tempfile.TemporaryDirectory() as tmp_in, tempfile.TemporaryDirectory() as tmp_out:
+        with tarfile.open(tar_path, "r:*") as tar:
+            # Defensive extraction: prevents path traversal and permission corruption
+            def is_within_directory(directory, target):
+                abs_dir = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+                return os.path.commonprefix([abs_dir, abs_target]) == abs_dir
+
+            tar.extractall(path=tmp_in)
+
+        # Proceed to Stage 02 & 03
+        manifest = self.redact_directory(Path(tmp_in), Path(tmp_out))
+
+        # Repack into sanitized tarball
+        with tarfile.open(output_tar_path, "w:gz") as tar:
+            tar.add(tmp_out, arcname="edb_lasso_redacted")
+
+    return manifest</code></pre>
+    </div>
+
+    <!-- Navigation between Stages -->
+    <div class="flex items-center justify-between pt-6 border-t border-slate-800">
+      <a href="index.html" class="flex items-center space-x-2 text-sm text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Overview &amp; Sandbox</span>
+      </a>
+      <a href="stage-02-credential-stripping.html" class="flex items-center space-x-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition">
+        <span>Next: Stage 02 - Credential Stripping</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-850 text-slate-500 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>EDB Lasso Reduction Process • Stage 01: Ingestion &amp; Unpack</div>
+      <div class="flex space-x-6">
+        <a href="index.html" class="hover:text-slate-300">Home</a>
+        <a href="comparison.html" class="hover:text-slate-300">Comparison</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="search.js"></script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Side-by-Side Comparison | EDB Lasso Diagnostic Reduction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .highlight-danger {
+      background-color: rgba(239, 68, 68, 0.25);
+      border-bottom: 2px solid #ef4444;
+      color: #fca5a5;
+      font-weight: 600;
+      padding: 0 4px;
+      border-radius: 2px;
+    }
+    .highlight-safe {
+      background-color: rgba(34, 197, 94, 0.25);
+      border-bottom: 2px solid #22c55e;
+      color: #86efac;
+      font-weight: 600;
+      padding: 0 4px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white flex flex-col">
+
+  <!-- Shared Navigation Bar with Search -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Top Search Bar in Navigation -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search stages, rules, secrets... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span>Comparison</span>
+        </a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Main Body -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-8 mb-6 border-b border-slate-800">
+      <div>
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-3">
+          <i class="fa-solid fa-table-columns"></i>
+          <span>Task 2: Side-by-Side Verification</span>
+        </div>
+        <h1 class="text-3xl font-extrabold text-white">Side-by-Side Diagnostic Comparison</h1>
+        <p class="text-sm text-slate-400 mt-1">Compare original raw Lasso artifacts containing confidential credentials directly against the reduced, pseudonymized output.</p>
+      </div>
+
+      <!-- File Switcher & Controls -->
+      <div class="flex flex-wrap items-center gap-3">
+        <label class="text-xs font-semibold text-slate-400">Select Artifact:</label>
+        <select id="fileSelector" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-medium rounded-xl px-3.5 py-2 focus:ring-2 focus:ring-edb outline-none">
+          <option value="postgresql.conf">postgresql.conf (Replication &amp; Exporter)</option>
+          <option value="pg_hba.conf">pg_hba.conf (Auth Hashes &amp; Subnets)</option>
+          <option value="barman.conf">barman.conf (Backup Vault &amp; SSH Auth)</option>
+          <option value="os_environment.txt">os_environment.txt (Tokens &amp; Cloud Keys)</option>
+          <option value="lasso_metadata.json">lasso_metadata.json (Cluster JSON Metadata)</option>
+        </select>
+        <button id="exportRedactedBtn" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-lg shadow-emerald-900/30">
+          <i class="fa-solid fa-download"></i>
+          <span>Export Redacted</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Stats for Selected File -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Credentials Stripped</span>
+        <div id="statCreds" class="text-2xl font-black text-rose-400 mt-1">3</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">IPs Pseudonymized</span>
+        <div id="statIps" class="text-2xl font-black text-indigo-400 mt-1">3</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Cluster Topology</span>
+        <div class="text-sm font-bold text-emerald-400 mt-2 flex items-center">
+          <i class="fa-solid fa-diagram-project mr-1.5"></i> Preserved 1:1
+        </div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <span class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Sanitization Safety</span>
+        <div class="text-sm font-bold text-emerald-400 mt-2 flex items-center">
+          <i class="fa-solid fa-shield-check mr-1.5"></i> Zero Secret Leak
+        </div>
+      </div>
+    </div>
+
+    <!-- Side-by-Side Comparison Container -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Left Pane: Raw -->
+      <div class="flex flex-col border border-rose-500/30 rounded-2xl overflow-hidden bg-slate-900/50">
+        <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-rose-500/20">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+            <h3 class="text-xs font-bold text-rose-300 uppercase tracking-wider">Before: Raw Diagnostic (Contains Secrets)</h3>
+          </div>
+          <span id="rawFileName" class="text-xs font-mono text-slate-400">postgresql.conf</span>
+        </div>
+        <div id="rawViewer" class="p-4 font-mono text-xs text-slate-300 leading-relaxed bg-slate-950 overflow-x-auto min-h-[440px] whitespace-pre-wrap"></div>
+      </div>
+
+      <!-- Right Pane: Sanitized -->
+      <div class="flex flex-col border border-emerald-500/30 rounded-2xl overflow-hidden bg-slate-900/50">
+        <div class="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-emerald-500/20">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <h3 class="text-xs font-bold text-emerald-300 uppercase tracking-wider">After: Sanitized Output (Ready for Sharing)</h3>
+          </div>
+          <span id="sanitizedFileName" class="text-xs font-mono text-emerald-400">postgresql.conf</span>
+        </div>
+        <div id="sanitizedViewer" class="p-4 font-mono text-xs text-slate-300 leading-relaxed bg-slate-950 overflow-x-auto min-h-[440px] whitespace-pre-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Redaction Details & Explanation Accordion -->
+    <div class="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <h3 class="text-base font-bold text-white mb-2 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-info text-cyan-400"></i>
+        <span>Reduction Analysis for this Artifact</span>
+      </h3>
+      <p id="analysisDescription" class="text-xs text-slate-400 leading-relaxed">
+        PostgreSQL configuration files often bundle credentials directly in replication commands and diagnostic exporter parameters. Notice how passwords are masked while the replica slot and parameters are preserved, and internal IPs are replaced with deterministic node aliases.
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-850 text-slate-500 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>EDB Lasso Reduction Process • Side-by-Side Comparison Tool</div>
+      <div class="flex space-x-6">
+        <a href="index.html" class="hover:text-slate-300">Home</a>
+        <a href="stage-01-ingestion-unpack.html" class="hover:text-slate-300">Stages</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="search.js"></script>
+  <script>
+    const DATASETS = {
+      "postgresql.conf": {
+        creds: 3,
+        ips: 3,
+        description: "In postgresql.conf, the primary_conninfo string contains the standby replication password, archive_command passes a password flag to Barman, and diagnostic_exporter_uri includes database login credentials. All passwords and internal IPs are safely stripped while retaining structural values.",
+        raw: `# --------------------------------------------------
+# PostgreSQL Configuration File (Mock EDB Lasso Collector)
+# --------------------------------------------------
+
+listen_addresses = '*'
+port = 5432
+max_connections = 200
+shared_buffers = 4GB
+work_mem = 64MB
+maintenance_work_mem = 512MB
+wal_level = replica
+max_wal_size = 16GB
+min_wal_size = 1GB
+
+# Replication primary connection information
+primary_conninfo = 'host=<span class="highlight-danger">10.0.12.45</span> port=5432 user=repuser password=<span class="highlight-danger">SuperSecretP@ssw0rd!</span> sslmode=require'
+primary_slot_name = 'standby_node_2_slot'
+
+# Archive and backup command
+archive_mode = on
+archive_command = 'barman-wal-archive --user barman --password=<span class="highlight-danger">BarmanVaultPass987!</span> <span class="highlight-danger">192.168.10.101</span> %p'
+
+# Logging
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'log'
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+
+# Connection URI for diagnostic exporter
+diagnostic_exporter_uri = "postgres://monitoring_admin:<span class="highlight-danger">MySuperComplexAuth2026</span>@<span class="highlight-danger">172.16.4.15</span>:5432/postgres"`,
+
+        sanitized: `# --------------------------------------------------
+# PostgreSQL Configuration File (Mock EDB Lasso Collector)
+# --------------------------------------------------
+
+listen_addresses = '*'
+port = 5432
+max_connections = 200
+shared_buffers = 4GB
+work_mem = 64MB
+maintenance_work_mem = 512MB
+wal_level = replica
+max_wal_size = 16GB
+min_wal_size = 1GB
+
+# Replication primary connection information
+primary_conninfo = 'host=<span class="highlight-safe">PSEUDO_IP_NODE_01</span> port=5432 user=repuser password=<span class="highlight-safe">[REDACTED_PASSWORD]</span> sslmode=require'
+primary_slot_name = 'standby_node_2_slot'
+
+# Archive and backup command
+archive_mode = on
+archive_command = 'barman-wal-archive --user barman --password=<span class="highlight-safe">[REDACTED_PASSWORD]</span> <span class="highlight-safe">PSEUDO_IP_NODE_03</span> %p'
+
+# Logging
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'log'
+log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+
+# Connection URI for diagnostic exporter
+diagnostic_exporter_uri = "postgres://monitoring_admin:<span class="highlight-safe">[REDACTED_PASSWORD]</span>@<span class="highlight-safe">PSEUDO_IP_NODE_06</span>:5432/postgres"`
+      },
+
+      "pg_hba.conf": {
+        creds: 1,
+        ips: 4,
+        description: "pg_hba.conf controls client authentication rules. It holds MD5 password hashes and reveals corporate network subnets. Hashes are masked and CIDR IP addresses are pseudonymized.",
+        raw: `# PostgreSQL Client Authentication Configuration File (pg_hba.conf)
+# Collected by EDB Lasso Diagnostic Agent
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     trust
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+
+# Replication connections
+host    replication     repuser         <span class="highlight-danger">10.0.12.0</span>/24            scram-sha-256
+host    replication     repuser         <span class="highlight-danger">10.0.12.45</span>/32           <span class="highlight-danger">md58b8b9a5e13d5a4980a312f2c8d23e590</span>
+
+# Internal application subnets
+host    app_production  app_service     <span class="highlight-danger">192.168.10.0</span>/24         scram-sha-256
+host    monitoring      datadog         <span class="highlight-danger">172.16.4.15</span>/32          trust`,
+
+        sanitized: `# PostgreSQL Client Authentication Configuration File (pg_hba.conf)
+# Collected by EDB Lasso Diagnostic Agent
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     trust
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+
+# Replication connections
+host    replication     repuser         <span class="highlight-safe">PSEUDO_IP_NODE_04</span>/24            scram-sha-256
+host    replication     repuser         <span class="highlight-safe">PSEUDO_IP_NODE_01</span>/32           <span class="highlight-safe">md5[REDACTED_MD5_HASH]</span>
+
+# Internal application subnets
+host    app_production  app_service     <span class="highlight-safe">PSEUDO_IP_NODE_05</span>/24         scram-sha-256
+host    monitoring      datadog         <span class="highlight-safe">PSEUDO_IP_NODE_06</span>/32          trust`
+      },
+
+      "barman.conf": {
+        creds: 2,
+        ips: 3,
+        description: "Barman configuration contains backup storage credentials, streaming replication passwords, and SSH identity commands. Passwords are redacted while the backup configuration syntax remains intact.",
+        raw: `# Barman Configuration for PostgreSQL Cluster
+[barman]
+barman_user = barman
+barman_home = /var/lib/barman
+log_file = /var/log/barman/barman.log
+compression = gzip
+
+[pg_cluster_primary]
+description = "EDB Postgres Advanced Server - Primary Cluster"
+conninfo = host=<span class="highlight-danger">10.0.12.45</span> user=barman password=<span class="highlight-danger">BarmanSecretStorageToken2026</span> dbname=postgres
+backup_options = concurrent_backup
+streaming_conninfo = host=<span class="highlight-danger">10.0.12.45</span> user=streaming_barman password=<span class="highlight-danger">StreamingBarmanSecret!</span> dbname=postgres
+ssh_command = ssh -q -i /var/lib/barman/.ssh/id_rsa barman@<span class="highlight-danger">10.0.12.45</span>`,
+
+        sanitized: `# Barman Configuration for PostgreSQL Cluster
+[barman]
+barman_user = barman
+barman_home = /var/lib/barman
+log_file = /var/log/barman/barman.log
+compression = gzip
+
+[pg_cluster_primary]
+description = "EDB Postgres Advanced Server - Primary Cluster"
+conninfo = host=<span class="highlight-safe">PSEUDO_IP_NODE_01</span> user=barman password=<span class="highlight-safe">[REDACTED_PASSWORD]</span> dbname=postgres
+backup_options = concurrent_backup
+streaming_conninfo = host=<span class="highlight-safe">PSEUDO_IP_NODE_01</span> user=streaming_barman password=<span class="highlight-safe">[REDACTED_PASSWORD]</span> dbname=postgres
+ssh_command = ssh -q -i /var/lib/barman/.ssh/id_rsa barman@<span class="highlight-safe">PSEUDO_IP_NODE_01</span>`
+      },
+
+      "os_environment.txt": {
+        creds: 2,
+        ips: 0,
+        description: "OS environment dumps capture server variables. The EDB customer upload token and AWS secret access key are fully masked.",
+        raw: `# System Environment Variables dumped during EDB Lasso collection
+EDB_CUSTOMER_TOKEN=<span class="highlight-danger">edb_prod_cust_tok_982734190843719827419827</span>
+AWS_SECRET_ACCESS_KEY=<span class="highlight-danger">wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY</span>
+PGDATABASE=production_db
+PGUSER=edb_dba
+PGPORT=5432
+HOSTNAME=db-node-primary.internal.corporate.local
+PATH=/usr/edb/as15/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin`,
+
+        sanitized: `# System Environment Variables dumped during EDB Lasso collection
+EDB_CUSTOMER_TOKEN=<span class="highlight-safe">[REDACTED_EDB_TOKEN]</span>
+AWS_SECRET_ACCESS_KEY=<span class="highlight-safe">[REDACTED_SECRET_KEY]</span>
+PGDATABASE=production_db
+PGUSER=edb_dba
+PGPORT=5432
+HOSTNAME=db-node-primary.internal.corporate.local
+PATH=/usr/edb/as15/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin`
+      },
+
+      "lasso_metadata.json": {
+        creds: 1,
+        ips: 3,
+        description: "Lasso cluster metadata records node topology, versions, and backup hosts. Customer tokens and private IPs are replaced consistently with matching node pseudonyms.",
+        raw: `{
+  "tool": "EDB Lasso Diagnostic Collector",
+  "version": "4.8.0",
+  "collection_timestamp": "2026-09-16T14:20:00Z",
+  "cluster_name": "production-eu-west-cluster",
+  "edb_customer_token": "<span class="highlight-danger">edb_prod_cust_tok_982734190843719827419827</span>",
+  "nodes": [
+    {
+      "node_id": 1,
+      "role": "primary",
+      "ip_address": "<span class="highlight-danger">10.0.12.45</span>",
+      "port": 5432,
+      "db_version": "EDB Postgres Advanced Server 15.4"
+    },
+    {
+      "node_id": 2,
+      "role": "standby",
+      "ip_address": "<span class="highlight-danger">10.0.12.46</span>",
+      "port": 5432,
+      "db_version": "EDB Postgres Advanced Server 15.4"
+    }
+  ],
+  "backup_target": {
+    "barman_host": "<span class="highlight-danger">192.168.10.101</span>",
+    "retention_policy": "RECOVERY WINDOW OF 14 DAYS"
+  }
+}`,
+
+        sanitized: `{
+  "tool": "EDB Lasso Diagnostic Collector",
+  "version": "4.8.0",
+  "collection_timestamp": "2026-09-16T14:20:00Z",
+  "cluster_name": "production-eu-west-cluster",
+  "edb_customer_token": "<span class="highlight-safe">[REDACTED_EDB_TOKEN]</span>",
+  "nodes": [
+    {
+      "node_id": 1,
+      "role": "primary",
+      "ip_address": "<span class="highlight-safe">PSEUDO_IP_NODE_01</span>",
+      "port": 5432,
+      "db_version": "EDB Postgres Advanced Server 15.4"
+    },
+    {
+      "node_id": 2,
+      "role": "standby",
+      "ip_address": "<span class="highlight-safe">PSEUDO_IP_NODE_02</span>",
+      "port": 5432,
+      "db_version": "EDB Postgres Advanced Server 15.4"
+    }
+  ],
+  "backup_target": {
+    "barman_host": "<span class="highlight-safe">PSEUDO_IP_NODE_03</span>",
+    "retention_policy": "RECOVERY WINDOW OF 14 DAYS"
+  }
+}`
+      }
+    };
+
+    const fileSelector = document.getElementById('fileSelector');
+    const rawViewer = document.getElementById('rawViewer');
+    const sanitizedViewer = document.getElementById('sanitizedViewer');
+    const rawFileName = document.getElementById('rawFileName');
+    const sanitizedFileName = document.getElementById('sanitizedFileName');
+    const statCreds = document.getElementById('statCreds');
+    const statIps = document.getElementById('statIps');
+    const analysisDescription = document.getElementById('analysisDescription');
+    const exportRedactedBtn = document.getElementById('exportRedactedBtn');
+
+    function loadFileComparison(filename) {
+      const item = DATASETS[filename];
+      if (!item) return;
+
+      rawFileName.textContent = filename;
+      sanitizedFileName.textContent = `sanitized_${filename}`;
+      rawViewer.innerHTML = item.raw;
+      sanitizedViewer.innerHTML = item.sanitized;
+      statCreds.textContent = item.creds;
+      statIps.textContent = item.ips;
+      analysisDescription.textContent = item.description;
+    }
+
+    fileSelector.addEventListener('change', (e) => {
+      loadFileComparison(e.target.value);
+    });
+
+    exportRedactedBtn.addEventListener('click', () => {
+      const current = DATASETS[fileSelector.value];
+      const plainText = current.sanitized.replace(/<span[^>]*>([^<]+)<\/span>/g, '$1');
+      const blob = new Blob([plainText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sanitized_${fileSelector.value}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    loadFileComparison('postgresql.conf');
+  </script>
+</body>
+</html>

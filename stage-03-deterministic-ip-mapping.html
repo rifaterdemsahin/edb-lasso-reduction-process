@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stage 03: Deterministic IP Mapping | EDB Lasso Reduction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white flex flex-col">
+
+  <!-- Navigation Bar with Search -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="index.html" class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div>
+            <span class="text-base sm:text-lg font-bold tracking-tight text-white">EDB Lasso Reduction</span>
+            <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold hidden sm:inline">PoC</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search stages, rules, secrets... (Press / or ⌘K)" class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition" />
+          <kbd class="absolute right-3 top-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-800 text-slate-400 rounded border border-slate-700">⌘K</kbd>
+        </div>
+      </div>
+
+      <nav class="flex items-center space-x-2 sm:space-x-4 text-xs sm:text-sm font-medium text-slate-300">
+        <div class="relative group">
+          <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-cyan-300 border border-slate-700 hover:bg-slate-700 transition">
+            <span>Stages</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          <div class="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-xl shadow-black/50 py-2 hidden group-hover:block z-50">
+            <a href="stage-01-ingestion-unpack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-box-open mr-2 w-4"></i>01. Ingestion &amp; Unpack</a>
+            <a href="stage-02-credential-stripping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-key mr-2 w-4"></i>02. Credential Stripping</a>
+            <a href="stage-03-deterministic-ip-mapping.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-cyan-400 font-semibold flex items-center"><i class="fa-solid fa-route mr-2 w-4"></i>03. IP Mapping</a>
+            <a href="stage-04-audit-manifest-repack.html" class="block px-4 py-2 text-xs hover:bg-slate-800 text-slate-300 flex items-center"><i class="fa-solid fa-file-contract mr-2 w-4"></i>04. Manifest &amp; Repack</a>
+          </div>
+        </div>
+
+        <a href="comparison.html" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-table-columns text-emerald-400"></i>
+          <span class="hidden sm:inline">Comparison</span>
+        </a>
+
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-2">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span class="hidden lg:inline">GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="searchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-start justify-center pt-20 hidden px-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-800 flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+        <input type="text" id="searchModalInput" placeholder="Type a stage, keyword, or secret type..." class="w-full bg-transparent text-white placeholder-slate-400 text-sm focus:outline-none" />
+        <button id="closeSearchModal" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded">ESC</button>
+      </div>
+      <div id="searchResults" class="p-3 max-h-96 overflow-y-auto space-y-1"></div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb -->
+    <div class="flex items-center space-x-2 text-xs font-mono text-slate-400 mb-4">
+      <a href="index.html" class="hover:text-cyan-400">Home</a>
+      <span>/</span>
+      <span>Stages</span>
+      <span>/</span>
+      <span class="text-indigo-400">Stage 03</span>
+    </div>
+
+    <!-- Header -->
+    <div class="border-b border-slate-800 pb-8 mb-8">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-4">
+        <i class="fa-solid fa-route"></i>
+        <span>Pipeline Stage 03 of 04</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">
+        Deterministic IP Mapping
+      </h1>
+      <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+        Maps internal IP addresses (e.g. <code class="text-cyan-300">10.0.12.45</code>) to consistent aliases (<code class="text-indigo-300">PSEUDO_IP_NODE_01</code>) preserving PostgreSQL cluster topology and node relationships without exposing private internal networks.
+      </p>
+    </div>
+
+    <!-- Why Deterministic Pseudonymization Matters -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+      <div class="p-6 rounded-2xl bg-slate-900 border border-red-500/30">
+        <div class="flex items-center space-x-2 text-rose-400 font-bold mb-2">
+          <i class="fa-solid fa-circle-xmark"></i>
+          <span>Naive Masking (Breaks Diagnostics)</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">
+          Replacing all IPs with generic <code class="text-rose-300">[REDACTED_IP]</code> destroys node correlation. Engineers cannot tell which standby connects to which primary, or which node triggered failover in repmgr or EFM.
+        </p>
+        <pre class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-rose-300/80 border border-slate-800"><code># All nodes look identical - Topology is lost!
+primary_conninfo = 'host=[REDACTED_IP] port=5432'
+barman_host = '[REDACTED_IP]'
+standby_1 = '[REDACTED_IP]'</code></pre>
+      </div>
+
+      <div class="p-6 rounded-2xl bg-slate-900 border border-emerald-500/30">
+        <div class="flex items-center space-x-2 text-emerald-400 font-bold mb-2">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Deterministic Pseudonyms (Safe &amp; Intact)</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">
+          Our algorithm creates a consistent 1-to-1 pseudonym map across every file in the bundle. Node relationships, replication trees, and backup streams remain 100% analyzable.
+        </p>
+        <pre class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-emerald-300 border border-slate-800"><code># Relational topology is fully preserved!
+primary_conninfo = 'host=PSEUDO_IP_NODE_01 port=5432'
+barman_host = 'PSEUDO_IP_NODE_03'
+standby_1 = 'PSEUDO_IP_NODE_02'</code></pre>
+      </div>
+    </div>
+
+    <!-- Interactive IP Converter Widget -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-10">
+      <div class="flex items-center space-x-2 mb-4">
+        <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+        <h3 class="font-bold text-white text-base">Live IP Pseudonymizer Test</h3>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">Enter sample cluster configuration or log lines containing IPv4 addresses to observe deterministic mapping:</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-mono text-slate-400 mb-1">Input Text with Internal IPs:</label>
+          <textarea id="ipInput" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-slate-200 focus:ring-1 focus:ring-indigo-400 focus:outline-none">Primary is 10.0.12.45.
+Standby 1 is 10.0.12.46 replicating from 10.0.12.45.
+Barman backup agent is at 192.168.10.101.</textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-mono text-slate-400 mb-1">Pseudonymized Topology Output:</label>
+          <div id="ipOutput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-indigo-300 h-[108px] overflow-auto whitespace-pre-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation between Stages -->
+    <div class="flex items-center justify-between pt-6 border-t border-slate-800">
+      <a href="stage-02-credential-stripping.html" class="flex items-center space-x-2 text-sm text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Previous: Stage 02 - Credential Stripping</span>
+      </a>
+      <a href="stage-04-audit-manifest-repack.html" class="flex items-center space-x-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition">
+        <span>Next: Stage 04 - Audit Manifest &amp; Repack</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-8 bg-slate-950 border-t border-slate-850 text-slate-500 text-xs mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>EDB Lasso Reduction Process • Stage 03: Deterministic IP Mapping</div>
+      <div class="flex space-x-6">
+        <a href="index.html" class="hover:text-slate-300">Home</a>
+        <a href="comparison.html" class="hover:text-slate-300">Comparison</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="search.js"></script>
+  <script>
+    const ipInput = document.getElementById('ipInput');
+    const ipOutput = document.getElementById('ipOutput');
+
+    function updateIpMasking() {
+      const text = ipInput.value;
+      const ipMap = {};
+      let counter = 1;
+      const ipRegex = /\b(?!(?:127\.0\.0\.1|0\.0\.0\.0)\b)(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
+
+      const res = text.replace(ipRegex, (ip) => {
+        if (!ipMap[ip]) {
+          ipMap[ip] = `PSEUDO_IP_NODE_${String(counter++).padStart(2, '0')}`;
+        }
+        return ipMap[ip];
+      });
+
+      ipOutput.textContent = res;
+    }
+
+    ipInput.addEventListener('input', updateIpMasking);
+    updateIpMasking();
+  </script>
+</body>
+</html>
