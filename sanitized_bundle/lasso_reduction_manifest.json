@@ -1,0 +1,178 @@
+{
+  "title": "EDB Lasso Reduction Manifest",
+  "version": "1.0.0",
+  "total_redactions": 21,
+  "input_path": "mock_lasso_bundle",
+  "output_path": "sanitized_bundle",
+  "category_breakdown": {
+    "network": 13,
+    "credentials": 6,
+    "api_tokens": 2
+  },
+  "rule_breakdown": {
+    "INTERNAL_IP_MASK": 13,
+    "CONNINFO_PASSWORD": 4,
+    "MD5_PASSWORD": 1,
+    "URI_CREDENTIALS": 1,
+    "EDB_CUSTOMER_TOKEN": 1,
+    "GENERIC_API_KEY": 1
+  },
+  "pseudonymized_ip_count": 6,
+  "ip_mapping_sample": {
+    "10.0.12.45": "PSEUDO_IP_NODE_01",
+    "10.0.12.46": "PSEUDO_IP_NODE_02",
+    "192.168.10.101": "PSEUDO_IP_NODE_03",
+    "10.0.12.0": "PSEUDO_IP_NODE_04",
+    "192.168.10.0": "PSEUDO_IP_NODE_05",
+    "172.16.4.15": "PSEUDO_IP_NODE_06"
+  },
+  "records_sample": [
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "lasso_metadata.json",
+      "matched_sample": "10.0.12.45 -> PSEUDO_IP_NODE_01"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "lasso_metadata.json",
+      "matched_sample": "10.0.12.46 -> PSEUDO_IP_NODE_02"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "lasso_metadata.json",
+      "matched_sample": "192.168.10.101 -> PSEUDO_IP_NODE_03"
+    },
+    {
+      "rule_id": "CONNINFO_PASSWORD",
+      "rule_name": "PostgreSQL Connection String Password",
+      "category": "credentials",
+      "source": "barman.conf",
+      "matched_sample": "password=BarmanSecretStorageToken2026"
+    },
+    {
+      "rule_id": "CONNINFO_PASSWORD",
+      "rule_name": "PostgreSQL Connection String Password",
+      "category": "credentials",
+      "source": "barman.conf",
+      "matched_sample": "password=StreamingBarmanSecret!"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "barman.conf",
+      "matched_sample": "10.0.12.45 -> PSEUDO_IP_NODE_01"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "barman.conf",
+      "matched_sample": "10.0.12.45 -> PSEUDO_IP_NODE_01"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "barman.conf",
+      "matched_sample": "10.0.12.45 -> PSEUDO_IP_NODE_01"
+    },
+    {
+      "rule_id": "MD5_PASSWORD",
+      "rule_name": "PostgreSQL MD5 Password Hash",
+      "category": "credentials",
+      "source": "pg_hba.conf",
+      "matched_sample": "md58b8b9a5e13d5a4980a312f2c8d23e590"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "pg_hba.conf",
+      "matched_sample": "10.0.12.0 -> PSEUDO_IP_NODE_04"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "pg_hba.conf",
+      "matched_sample": "10.0.12.45 -> PSEUDO_IP_NODE_01"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "pg_hba.conf",
+      "matched_sample": "192.168.10.0 -> PSEUDO_IP_NODE_05"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "pg_hba.conf",
+      "matched_sample": "172.16.4.15 -> PSEUDO_IP_NODE_06"
+    },
+    {
+      "rule_id": "CONNINFO_PASSWORD",
+      "rule_name": "PostgreSQL Connection String Password",
+      "category": "credentials",
+      "source": "postgresql.conf",
+      "matched_sample": "password=SuperSecretP@ssw0rd!"
+    },
+    {
+      "rule_id": "CONNINFO_PASSWORD",
+      "rule_name": "PostgreSQL Connection String Password",
+      "category": "credentials",
+      "source": "postgresql.conf",
+      "matched_sample": "password=BarmanVaultPass987!"
+    },
+    {
+      "rule_id": "URI_CREDENTIALS",
+      "rule_name": "Database URI User Credentials",
+      "category": "credentials",
+      "source": "postgresql.conf",
+      "matched_sample": "postgres://monitoring_admin:MySuperCompl..."
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "postgresql.conf",
+      "matched_sample": "10.0.12.45 -> PSEUDO_IP_NODE_01"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "postgresql.conf",
+      "matched_sample": "192.168.10.101 -> PSEUDO_IP_NODE_03"
+    },
+    {
+      "rule_id": "INTERNAL_IP_MASK",
+      "rule_name": "Internal IP Address Pseudonymization",
+      "category": "network",
+      "source": "postgresql.conf",
+      "matched_sample": "172.16.4.15 -> PSEUDO_IP_NODE_06"
+    },
+    {
+      "rule_id": "EDB_CUSTOMER_TOKEN",
+      "rule_name": "EDB Customer / Support Portal Token",
+      "category": "api_tokens",
+      "source": "os_environment.txt",
+      "matched_sample": "EDB_CUSTOMER_TOKEN=edb_prod_cust_tok_982..."
+    },
+    {
+      "rule_id": "GENERIC_API_KEY",
+      "rule_name": "API Keys and Cloud Access Secrets",
+      "category": "api_tokens",
+      "source": "os_environment.txt",
+      "matched_sample": "AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MD..."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "tool": "EDB Lasso Diagnostic Collector",
+  "version": "4.8.0",
+  "collection_timestamp": "2026-09-16T14:20:00Z",
+  "cluster_name": "production-eu-west-cluster",
+  "edb_customer_token": "edb_prod_cust_tok_982734190843719827419827",
+  "nodes": [
+    {
+      "node_id": 1,
+      "role": "primary",
+      "ip_address": "10.0.12.45",
+      "port": 5432,
+      "db_version": "EDB Postgres Advanced Server 15.4"
+    },
+    {
+      "node_id": 2,
+      "role": "standby",
+      "ip_address": "10.0.12.46",
+      "port": 5432,
+      "db_version": "EDB Postgres Advanced Server 15.4"
+    }
+  ],
+  "backup_target": {
+    "barman_host": "192.168.10.101",
+    "retention_policy": "RECOVERY WINDOW OF 14 DAYS"
+  }
+}

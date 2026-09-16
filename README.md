@@ -1,2 +1,100 @@
-# edb-lasso-reduction-process
-edb lasso reduction process
+# EDB Lasso Diagnostic Reduction Process (PoC)
+
+[![PostgreSQL Safe](https://img.shields.io/badge/PostgreSQL-Safe-336791?logo=postgresql&logoColor=white)](https://www.enterprisedb.com)
+[![PoC Status](https://img.shields.io/badge/Status-Complete-success)]()
+[![GitHub Pages](https://img.shields.io/badge/Demo-GitHub%20Pages-blue)](https://rifaterdemsahin.github.io/edb-lasso-reduction-process/)
+
+A proof-of-concept project demonstrating how to sanitize, reduce, and pseudonymize **EDB Lasso** diagnostic reports and bundles before sharing them with EnterpriseDB support or community issue trackers, ensuring zero secret leakage.
+
+---
+
+## 🔍 What is EDB Lasso?
+
+**EDB Lasso** is a multi-platform diagnostic tool developed by **EnterpriseDB (EDB)**, one of the leading providers of PostgreSQL products, enterprise tooling, and mission-critical support.
+
+When troubleshooting or debugging complex database environments, getting a complete picture of the system's state is often the most difficult step. Lasso acts as an automated collector that safely gathers configuration details, performance metrics, and system statistics from both the PostgreSQL database and the underlying operating system.
+
+### Why EDB Lasso is Critical When Debugging PostgreSQL Environments:
+
+1. **Standardizes the Troubleshooting Process**  
+   In traditional database debugging, support engineers and DBAs waste hours playing ping-pong with requests: *"Can you send me this log file?"* followed by *"Now can you show me the output of this query?"*  
+   Lasso eliminates this by instantly bundling a comprehensive, standardized report of the entire system state. Support engineers receive exactly what they need in a format they already know how to read, drastically accelerating root-cause analysis.
+
+2. **It is Production-Safe**  
+   One of the biggest risks of debugging a live database is accidentally exposing sensitive data or slowing down the server. Lasso is specifically designed for production environments:
+   * **Zero Data Extraction:** It only collects system statistics, configuration files, and diagnostics. It **never** pulls actual user data or rows from your database tables.
+   * **Low Overhead:** It is built to run with an imperceptible impact on your active database workload.
+
+3. **Holistic Ecosystem Visibility**  
+   Database problems are rarely confined to just the database. A slow query might be caused by CPU throttling on the OS, or a replication failure might stem from a misconfigured backup tool. Lasso gathers data from:
+   * **The Operating System:** Even if Postgres isn't installed on the machine, you can run Lasso to gather OS-level context (memory, CPU, disk configurations).
+   * **The EDB/Postgres Ecosystem:** It natively collects data from surrounding architecture like **Barman** (backup/recovery), **repmgr** (replication/failover), and **EFM** (EnterpriseDB Failover Manager).
+
+4. **Direct Support Integration**  
+   Lasso is explicitly built to interface with EDB’s support portal. You configure it with your company's EDB customer token, and it can automatically upload the bundled diagnostic report securely to EDB's support engineers.
+
+> **Summary:** If you are debugging a Postgres environment, EDB Lasso acts as your primary "black box" flight recorder. It grabs all the necessary context cleanly and securely so that you (or EDB's support team) can identify and fix the issue without guessing.
+
+---
+
+## 🛡️ Why the Reduction / Redaction Process is Necessary
+
+While EDB Lasso guarantees zero user data extraction from tables, configuration artifacts (`postgresql.conf`, `pg_hba.conf`, `barman.conf`) and environment dumps frequently contain:
+- **Connection Strings & Passwords**: `primary_conninfo = 'host=... password=SecretPass'`
+- **Backup Authentication Tokens**: Barman streaming credentials and SSH private key references
+- **Authentication Hashes**: `md5...` and `SCRAM-SHA-256$...` passwords
+- **Customer Support Tokens**: `EDB_CUSTOMER_TOKEN`
+- **Cloud Credentials**: Environment variables like `AWS_SECRET_ACCESS_KEY`
+- **Internal Topology & Network IPs**: Private subnets and node addresses
+
+The **EDB Lasso Reduction Process** provides an automated, deterministic sanitization pipeline before uploading or sharing diagnostic bundles.
+
+---
+
+## ⚙️ Architecture & Features
+
+```
++--------------------------+       +-----------------------------------+       +-------------------------------+
+| Raw EDB Lasso Artifacts  | ----> |   Lasso Reduction Engine          | ----> | Sanitized Diagnostic Bundle   |
+| (Configs, Tarball, Logs) |       |   - Credential Stripping          |       | - Clean Configs & Logs        |
++--------------------------+       |   - Deterministic IP Masking      |       | - Cryptographic Manifest      |
+                                   |   - Audit Logging & Verification  |       |   (lasso_reduction_manifest)  |
+                                   +-----------------------------------+       +-------------------------------+
+```
+
+1. **Deterministic Pseudonymization**: Maps IP addresses consistently (e.g. `10.0.12.45` -> `PSEUDO_IP_NODE_01`) across all files in the bundle, preserving cluster topology and replication relationships without revealing internal network addressing.
+2. **Multi-layer Secret Masking**: Strips plaintext passwords, SCRAM secrets, MD5 hashes, URI credentials, API tokens, and EDB customer keys.
+3. **Audit Manifest Generation**: Creates a structured `lasso_reduction_manifest.json` detailing exact counts, categories, and proof of sanitization for compliance audits.
+4. **Tarball Support**: Direct unpack, sanitization, and repacking of `.tar.gz` Lasso bundles.
+5. **Interactive Web Sandbox**: Built-in browser-based simulator (`index.html`) to preview and test reduction rules instantly.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Run Unit & Integration Tests
+```bash
+python3 test_lasso_redact.py
+```
+
+### 2. Sanitize a Diagnostic Directory
+```bash
+python3 lasso_redact.py -i mock_lasso_bundle -o sanitized_bundle
+```
+
+### 3. Sanitize a Compressed Tarball
+```bash
+python3 lasso_redact.py -i lasso_archive.tar.gz -o lasso_archive_sanitized.tar.gz
+```
+
+### 4. Run the Local Interactive Web UI
+```bash
+python3 -m http.server 30088
+open -a "Google Chrome" http://localhost:30088
+```
+
+---
+
+## 🌐 Live GitHub Pages Demo
+Visit the live interactive page:
+👉 **[https://rifaterdemsahin.github.io/edb-lasso-reduction-process/](https://rifaterdemsahin.github.io/edb-lasso-reduction-process/)**

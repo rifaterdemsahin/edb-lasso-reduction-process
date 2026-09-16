@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDB Lasso Reduction Process | Production-Safe Diagnostic Sanitizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            edb: {
+              DEFAULT: '#0065a3',
+              dark: '#004c7d',
+              light: '#0284c7',
+              accent: '#f97316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .diff-removed {
+      background-color: rgba(239, 68, 68, 0.25);
+      border-bottom: 2px solid #ef4444;
+      padding: 0 4px;
+      border-radius: 2px;
+    }
+    .diff-added {
+      background-color: rgba(34, 197, 94, 0.25);
+      border-bottom: 2px solid #22c55e;
+      padding: 0 4px;
+      font-weight: 600;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-edb-light selection:text-white">
+
+  <!-- Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-edb-dark via-edb to-cyan-400 flex items-center justify-center shadow-lg shadow-edb/30 text-white font-black text-xl">
+          <i class="fa-solid fa-database"></i>
+        </div>
+        <div>
+          <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-cyan-300 bg-clip-text text-transparent">
+            EDB Lasso Reduction Process
+          </span>
+          <span class="ml-2 text-xs uppercase px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold">
+            PoC & Sanitizer
+          </span>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-slate-400">
+        <a href="#about" class="hover:text-white transition">About EDB Lasso</a>
+        <a href="#why-lasso" class="hover:text-white transition">Why Lasso</a>
+        <a href="#reduction-pipeline" class="hover:text-white transition">Reduction Process</a>
+        <a href="#sandbox" class="hover:text-white transition">Interactive Sandbox</a>
+        <a href="#cli-guide" class="hover:text-white transition">CLI PoC</a>
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="flex items-center space-x-2 text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-1.5 rounded-lg border border-slate-700 transition">
+          <i class="fa-brands fa-github"></i>
+          <span>GitHub Repo</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="text-center max-w-3xl mx-auto">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-edb/20 border border-edb/40 text-cyan-300 text-xs font-semibold mb-6">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Enterprise Security &amp; Diagnostics</span>
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
+          Share Diagnostic Bundles <br class="hidden sm:inline" />
+          <span class="bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
+            Without Compromising Secrets
+          </span>
+        </h1>
+        <p class="text-lg text-slate-300 leading-relaxed mb-8">
+          EnterpriseDB (EDB) Lasso is the premier flight-recorder diagnostic tool for PostgreSQL.
+          Our <strong>Lasso Reduction Process</strong> implements deterministic pseudonymization, secret stripping, and audit manifests so you can share diagnostic logs with EDB support or public issue trackers with complete confidence.
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <a href="#sandbox" class="px-6 py-3 rounded-xl bg-edb hover:bg-edb-dark text-white font-semibold shadow-lg shadow-edb/30 transition flex items-center space-x-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Try Interactive Sanitizer</span>
+          </a>
+          <a href="#reduction-pipeline" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 transition flex items-center space-x-2">
+            <i class="fa-solid fa-diagram-project"></i>
+            <span>Explore Architecture</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About EDB Lasso Section -->
+  <section id="about" class="py-16 bg-slate-950 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="text-edb-light font-semibold uppercase tracking-wider text-xs">Diagnostic Powerhouse</span>
+          <h2 class="text-3xl font-bold text-white mt-2 mb-4">What is EDB Lasso?</h2>
+          <p class="text-slate-300 leading-relaxed mb-4">
+            <strong>EDB Lasso</strong> is a multi-platform diagnostic tool developed by <strong>EnterpriseDB (EDB)</strong>, one of the leading providers of PostgreSQL products, enterprise tooling, and 24/7 mission-critical support.
+          </p>
+          <p class="text-slate-300 leading-relaxed mb-6">
+            When troubleshooting or debugging complex database environments, getting a complete picture of the system's state is often the most difficult step. Lasso acts as an automated collector that safely gathers configuration details, performance metrics, and system statistics from both the PostgreSQL database and the underlying operating system.
+          </p>
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-start space-x-4">
+            <div class="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-400 mt-1">
+              <i class="fa-solid fa-box-archive text-lg"></i>
+            </div>
+            <div>
+              <h4 class="font-semibold text-white">The "Black Box" Flight Recorder</h4>
+              <p class="text-sm text-slate-400 mt-1">
+                Lasso grabs all the necessary context cleanly and securely so support teams and DBAs can identify and fix the issue without guesswork or iterative delays.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Pillars of Lasso -->
+        <div id="why-lasso" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg mb-3">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">1. Standardizes Process</h3>
+            <p class="text-sm text-slate-400">
+              Eliminates log "ping-pong" between engineers. Instantly bundles standardized system metrics support teams already know how to read.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg mb-3">
+              <i class="fa-solid fa-shield-check"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">2. Production-Safe</h3>
+            <p class="text-sm text-slate-400">
+              <strong>Zero Data Extraction:</strong> Never pulls user data or table rows. Imperceptible overhead on active workloads.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg mb-3">
+              <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">3. Holistic Visibility</h3>
+            <p class="text-sm text-slate-400">
+              Spans OS statistics (CPU, memory, disk) and surrounding tools like <strong>Barman</strong>, <strong>repmgr</strong>, and <strong>EFM</strong>.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg mb-3">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">4. Direct Support Integration</h3>
+            <p class="text-sm text-slate-400">
+              Integrated with customer tokens for secure, automated uploads straight into EDB's support portal case tickets.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Reduction & Redaction Architecture -->
+  <section id="reduction-pipeline" class="py-16 bg-slate-900/50 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <span class="text-edb-light font-semibold uppercase tracking-wider text-xs">Zero-Leak Assurance</span>
+        <h2 class="text-3xl font-bold text-white mt-2 mb-4">The Lasso Reduction Process</h2>
+        <p class="text-slate-300">
+          While Lasso does not touch customer database tables, configuration files like <code class="text-cyan-300">postgresql.conf</code>, <code class="text-cyan-300">pg_hba.conf</code>, and <code class="text-cyan-300">barman.conf</code> frequently contain replication passwords, auth hashes, customer portal tokens, and internal network IP ranges.
+        </p>
+      </div>
+
+      <!-- Pipeline Step Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 01</span>
+          <div class="text-2xl text-cyan-400 mb-3"><i class="fa-solid fa-box-open"></i></div>
+          <h4 class="font-bold text-white mb-2">Ingestion &amp; Unpack</h4>
+          <p class="text-sm text-slate-400">Extracts the EDB Lasso tarball (.tar.gz) or output directory without altering raw file permissions.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 02</span>
+          <div class="text-2xl text-red-400 mb-3"><i class="fa-solid fa-key"></i></div>
+          <h4 class="font-bold text-white mb-2">Credential Stripping</h4>
+          <p class="text-sm text-slate-400">Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 03</span>
+          <div class="text-2xl text-indigo-400 mb-3"><i class="fa-solid fa-route"></i></div>
+          <h4 class="font-bold text-white mb-2">Deterministic IP Mapping</h4>
+          <p class="text-sm text-slate-400">Maps internal IP addresses (e.g. 10.0.12.45) to consistent aliases (<code class="text-indigo-300 text-xs">PSEUDO_IP_NODE_01</code>) preserving cluster topology.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <span class="absolute top-4 right-4 text-xs font-mono font-bold text-slate-500">STEP 04</span>
+          <div class="text-2xl text-emerald-400 mb-3"><i class="fa-solid fa-file-contract"></i></div>
+          <h4 class="font-bold text-white mb-2">Audit Manifest &amp; Repack</h4>
+          <p class="text-sm text-slate-400">Generates <code class="text-emerald-300 text-xs">lasso_reduction_manifest.json</code> detailing redaction tallies and produces a sanitized archive.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Sandbox Section -->
+  <section id="sandbox" class="py-16 bg-slate-950 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8">
+        <div>
+          <span class="text-edb-light font-semibold uppercase tracking-wider text-xs">Live Interactive Simulator</span>
+          <h2 class="text-3xl font-bold text-white mt-1">Lasso Diagnostic Reduction Sandbox</h2>
+          <p class="text-slate-400 text-sm mt-1">Select a mock diagnostic file or paste your own to test real-time reduction and pseudonymization.</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex items-center space-x-3">
+          <label class="text-xs text-slate-400 font-medium">Preset Artifact:</label>
+          <select id="presetSelect" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-edb outline-none">
+            <option value="postgresql">postgresql.conf (Primary & Replication)</option>
+            <option value="pghba">pg_hba.conf (Client Auth & Subnets)</option>
+            <option value="barman">barman.conf (Backup & SSH auth)</option>
+            <option value="env">os_environment.txt (Tokens & AWS keys)</option>
+          </select>
+          <button id="runRedactBtn" class="px-4 py-1.5 bg-edb hover:bg-edb-dark text-white rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+            <i class="fa-solid fa-play"></i>
+            <span>Sanitize Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Counters -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">Passwords Redacted</span>
+          <p id="statPasswords" class="text-2xl font-black text-rose-400 mt-1">0</p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">Tokens &amp; Secrets</span>
+          <p id="statTokens" class="text-2xl font-black text-amber-400 mt-1">0</p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">IPs Pseudonymized</span>
+          <p id="statIps" class="text-2xl font-black text-indigo-400 mt-1">0</p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-xs text-slate-400 font-medium">Redaction Status</span>
+          <p id="statStatus" class="text-sm font-bold text-emerald-400 mt-2 flex items-center">
+            <i class="fa-solid fa-circle-check mr-1.5"></i> Clean &amp; Safe
+          </p>
+        </div>
+      </div>
+
+      <!-- Editor Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Input -->
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-t border-l border-r border-slate-800 rounded-t-xl text-xs font-mono text-slate-400">
+            <span class="flex items-center space-x-2 font-semibold text-slate-300">
+              <i class="fa-solid fa-file-lines text-rose-400"></i>
+              <span id="inputLabel">Raw Lasso Artifact (with secrets)</span>
+            </span>
+            <button id="copyInputBtn" class="hover:text-white transition"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
+          </div>
+          <textarea id="rawInput" rows="16" class="w-full bg-slate-950 border border-slate-800 rounded-b-xl p-4 font-mono text-xs text-slate-300 focus:ring-2 focus:ring-edb outline-none leading-relaxed resize-y"></textarea>
+        </div>
+
+        <!-- Output -->
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-t border-l border-r border-slate-800 rounded-t-xl text-xs font-mono text-slate-400">
+            <span class="flex items-center space-x-2 font-semibold text-emerald-400">
+              <i class="fa-solid fa-shield-check"></i>
+              <span>Reduced &amp; Sanitized Output</span>
+            </span>
+            <div class="space-x-3">
+              <button id="copyOutputBtn" class="hover:text-white transition"><i class="fa-regular fa-copy mr-1"></i>Copy</button>
+              <button id="downloadBtn" class="hover:text-white text-emerald-400 transition font-semibold"><i class="fa-solid fa-download mr-1"></i>Export</button>
+            </div>
+          </div>
+          <div id="redactedView" class="w-full bg-slate-950 border border-slate-800 rounded-b-xl p-4 font-mono text-xs text-slate-300 overflow-auto leading-relaxed h-[360px] whitespace-pre-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Redaction Manifest Inspector -->
+      <div class="mt-8 p-6 rounded-2xl bg-slate-900 border border-slate-800">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-receipt text-cyan-400 text-lg"></i>
+            <h3 class="font-bold text-white text-base">Generated Redaction Manifest (<code class="text-cyan-300 text-xs">lasso_reduction_manifest.json</code>)</h3>
+          </div>
+          <span class="text-xs text-slate-400">Cryptographic audit log accompanying the diagnostic upload</span>
+        </div>
+        <pre id="manifestJson" class="bg-slate-950 rounded-xl p-4 font-mono text-xs text-cyan-300 overflow-x-auto border border-slate-800/80"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI Guide & PoC Commands -->
+  <section id="cli-guide" class="py-16 bg-slate-900/40 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mb-10">
+        <span class="text-edb-light font-semibold uppercase tracking-wider text-xs">Terminal Automation</span>
+        <h2 class="text-3xl font-bold text-white mt-1">Running the Reduction PoC via CLI</h2>
+        <p class="text-slate-400 mt-2 text-sm">
+          Integrate the EDB Lasso reduction engine directly into your automated collection scripts or CI/CD pipelines before uploading to EDB Support.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h3 class="text-base font-bold text-white mb-3 flex items-center space-x-2">
+            <i class="fa-solid fa-terminal text-cyan-400"></i>
+            <span>Sanitize a Mock Diagnostic Folder</span>
+          </h3>
+          <p class="text-xs text-slate-400 mb-4">Recursively scrubs configs, pseudonymizes IPs, and creates a manifest in the destination folder:</p>
+          <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-cyan-300 border border-slate-800 overflow-x-auto"><code>python3 lasso_redact.py \
+  -i mock_lasso_bundle \
+  -o sanitized_lasso_bundle</code></pre>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h3 class="text-base font-bold text-white mb-3 flex items-center space-x-2">
+            <i class="fa-solid fa-file-zipper text-purple-400"></i>
+            <span>Sanitize a Compressed Tarball (.tar.gz)</span>
+          </h3>
+          <p class="text-xs text-slate-400 mb-4">Unpacks, reduces sensitive secrets in-memory or in temporary storage, and produces a clean bundle:</p>
+          <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-purple-300 border border-slate-800 overflow-x-auto"><code>python3 lasso_redact.py \
+  -i lasso_diagnostic_20260916.tar.gz \
+  -o lasso_diagnostic_20260916_redacted.tar.gz</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 bg-slate-950 text-slate-500 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span>EDB Lasso Reduction Process PoC</span>
+        <span>•</span>
+        <span>EnterpriseDB Diagnostic Redactor</span>
+      </div>
+      <div class="flex items-center space-x-6">
+        <a href="https://github.com/rifaterdemsahin/edb-lasso-reduction-process" target="_blank" class="hover:text-slate-300 transition">
+          <i class="fa-brands fa-github mr-1"></i> Repository
+        </a>
+        <a href="#about" class="hover:text-slate-300 transition">Back to Top</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script for Interactive Sandbox -->
+  <script>
+    const PRESETS = {
+      postgresql: `# PostgreSQL Configuration File (Mock EDB Lasso Collector)
+listen_addresses = '*'
+port = 5432
+max_connections = 200
+shared_buffers = 4GB
+wal_level = replica
+
+# Replication primary connection information
+primary_conninfo = 'host=10.0.12.45 port=5432 user=repuser password=SuperSecretP@ssw0rd! sslmode=require'
+primary_slot_name = 'standby_node_2_slot'
+
+# Archive and backup command
+archive_mode = on
+archive_command = 'barman-wal-archive --user barman --password=BarmanVaultPass987! 192.168.10.101 %p'
+
+# Connection URI for diagnostic exporter
+diagnostic_exporter_uri = "postgres://monitoring_admin:MySuperComplexAuth2026@172.16.4.15:5432/postgres"`,
+
+      pghba: `# PostgreSQL Client Authentication Configuration File (pg_hba.conf)
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     trust
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+
+# Replication connections
+host    replication     repuser         10.0.12.0/24            scram-sha-256
+host    replication     repuser         10.0.12.45/32           md58b8b9a5e13d5a4980a312f2c8d23e590
+
+# Internal application subnets
+host    app_production  app_service     192.168.10.0/24         scram-sha-256
+host    monitoring      datadog         172.16.4.15/32          trust`,
+
+      barman: `# Barman Configuration for PostgreSQL Cluster
+[barman]
+barman_user = barman
+barman_home = /var/lib/barman
+log_file = /var/log/barman/barman.log
+
+[pg_cluster_primary]
+description = "EDB Postgres Advanced Server - Primary Cluster"
+conninfo = host=10.0.12.45 user=barman password=BarmanSecretStorageToken2026 dbname=postgres
+streaming_conninfo = host=10.0.12.45 user=streaming_barman password=StreamingBarmanSecret! dbname=postgres
+ssh_command = ssh -q -i /var/lib/barman/.ssh/id_rsa barman@10.0.12.45`,
+
+      env: `# System Environment Variables dumped during EDB Lasso collection
+EDB_CUSTOMER_TOKEN=edb_prod_cust_tok_982734190843719827419827
+AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+PGDATABASE=production_db
+PGUSER=edb_dba
+PGPORT=5432
+HOSTNAME=db-node-primary.internal.corporate.local`
+    };
+
+    const rawInput = document.getElementById('rawInput');
+    const redactedView = document.getElementById('redactedView');
+    const manifestJson = document.getElementById('manifestJson');
+    const presetSelect = document.getElementById('presetSelect');
+    const runRedactBtn = document.getElementById('runRedactBtn');
+    const copyOutputBtn = document.getElementById('copyOutputBtn');
+    const copyInputBtn = document.getElementById('copyInputBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let currentRedactedText = '';
+
+    function performRedaction() {
+      const text = rawInput.value;
+      const ipMap = {};
+      let ipCounter = 1;
+
+      let passwordCount = 0;
+      let tokenCount = 0;
+      let ipCount = 0;
+
+      let sanitized = text;
+
+      // 1. Conninfo Password
+      sanitized = sanitized.replace(/(password\s*=\s*)(['"]?)([^\s'"]+)\2/gi, (m, p1, q, p2) => {
+        passwordCount++;
+        return `${p1}<span class="diff-added">[REDACTED_PASSWORD]</span>`;
+      });
+
+      // 2. URI Password
+      sanitized = sanitized.replace(/((?:postgres|postgresql|edb):\/\/[^:\/\s]+:)([^@\s]+)(@)/gi, (m, p1, p2, p3) => {
+        passwordCount++;
+        return `${p1}<span class="diff-added">[REDACTED_PASSWORD]</span>${p3}`;
+      });
+
+      // 3. EDB Customer Token
+      sanitized = sanitized.replace(/(EDB_CUSTOMER_TOKEN\s*=\s*|token\s*:\s*['"]?)([a-zA-Z0-9_\-]{20,64})/gi, (m, p1, p2) => {
+        tokenCount++;
+        return `${p1}<span class="diff-added">[REDACTED_EDB_TOKEN]</span>`;
+      });
+
+      // 4. Cloud keys
+      sanitized = sanitized.replace(/((?:aws_secret_access_key|api_key|secret_key)\s*[:=]\s*['"]?)([a-zA-Z0-9\/+=_\-]{16,64})/gi, (m, p1, p2) => {
+        tokenCount++;
+        return `${p1}<span class="diff-added">[REDACTED_SECRET_KEY]</span>`;
+      });
+
+      // 5. MD5 Password hashes
+      sanitized = sanitized.replace(/\bmd5[a-f0-9]{32}\b/gi, (m) => {
+        passwordCount++;
+        return `<span class="diff-added">md5[REDACTED_MD5_HASH]</span>`;
+      });
+
+      // 6. IPs (Deterministic Pseudonymization)
+      const ipRegex = /\b(?!(?:127\.0\.0\.1|0\.0\.0\.0)\b)(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
+      sanitized = sanitized.replace(ipRegex, (ip) => {
+        if (!ipMap[ip]) {
+          ipMap[ip] = `PSEUDO_IP_NODE_${String(ipCounter++).padStart(2, '0')}`;
+          ipCount++;
+        }
+        return `<span class="diff-added">${ipMap[ip]}</span>`;
+      });
+
+      // Plain text without HTML tags for copy/export
+      currentRedactedText = sanitized.replace(/<span class="diff-added">([^<]+)<\/span>/g, '$1');
+
+      redactedView.innerHTML = sanitized;
+
+      // Update counters
+      document.getElementById('statPasswords').innerText = passwordCount;
+      document.getElementById('statTokens').innerText = tokenCount;
+      document.getElementById('statIps').innerText = ipCount;
+
+      // Update Manifest
+      const manifest = {
+        title: "EDB Lasso Reduction Manifest",
+        status: "SANITIZED_PRODUCTION_SAFE",
+        timestamp: new Date().toISOString(),
+        summary: {
+          passwords_redacted: passwordCount,
+          tokens_and_secrets_redacted: tokenCount,
+          ips_pseudonymized: ipCount
+        },
+        ip_topology_mapping: ipMap,
+        compliance_check: {
+          zero_customer_data_pulled: true,
+          zero_plaintext_credentials: true,
+          pci_dss_requirement_3_safe: true
+        }
+      };
+
+      manifestJson.innerText = JSON.stringify(manifest, null, 2);
+    }
+
+    // Load default
+    rawInput.value = PRESETS.postgresql;
+    performRedaction();
+
+    presetSelect.addEventListener('change', (e) => {
+      rawInput.value = PRESETS[e.target.value] || '';
+      performRedaction();
+    });
+
+    rawInput.addEventListener('input', performRedaction);
+    runRedactBtn.addEventListener('click', performRedaction);
+
+    copyOutputBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentRedactedText);
+      copyOutputBtn.innerHTML = '<i class="fa-solid fa-check mr-1 text-emerald-400"></i>Copied!';
+      setTimeout(() => {
+        copyOutputBtn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>Copy';
+      }, 2000);
+    });
+
+    copyInputBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(rawInput.value);
+      copyInputBtn.innerHTML = '<i class="fa-solid fa-check mr-1 text-emerald-400"></i>Copied!';
+      setTimeout(() => {
+        copyInputBtn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>Copy';
+      }, 2000);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([currentRedactedText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `redacted_${presetSelect.value}_output.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

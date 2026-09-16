@@ -1,0 +1,8 @@
+# System Environment Variables dumped during EDB Lasso collection
+EDB_CUSTOMER_TOKEN=[REDACTED_EDB_TOKEN]
+AWS_SECRET_ACCESS_KEY=[REDACTED_SECRET_KEY]
+PGDATABASE=production_db
+PGUSER=edb_dba
+PGPORT=5432
+HOSTNAME=db-node-primary.internal.corporate.local
+PATH=/usr/edb/as15/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
