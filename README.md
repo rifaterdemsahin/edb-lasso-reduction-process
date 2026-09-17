@@ -1,3 +1,5 @@
+> https://rifaterdemsahin.github.io/edb-lasso-reduction-process/
+
 # EDB Lasso Diagnostic Reduction Process (PoC)
 
 [![PostgreSQL Safe](https://img.shields.io/badge/PostgreSQL-Safe-336791?logo=postgresql&logoColor=white)](https://www.enterprisedb.com)
