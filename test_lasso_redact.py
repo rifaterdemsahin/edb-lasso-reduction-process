@@ -119,6 +119,59 @@ class TestLassoReduction(unittest.TestCase):
                 self.assertTrue(out_file.exists())
                 self.assertEqual(out_file.read_bytes(), sample_data)
 
+    def test_dual_manifests_when_zipped_in_output(self):
+        """Verify that when a tarball is reduced, 2 manifest files are created in the output destination:
+        1. lasso_reduction_manifest_security_donotshare.json
+        2. lasso_reduction_manifest_support.json
+        And verify that the support manifest contains ZERO credentials, while the security manifest preserves internal audit data.
+        """
+        import tarfile
+        import json
+        from lasso_redact import create_mock_bundle_tarball
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            raw_tar = tmp_path / "raw.tar.gz"
+            out_dir = tmp_path / "output_bundle"
+            out_dir.mkdir()
+            out_tar = out_dir / "sanitized.tar.gz"
+
+            create_mock_bundle_tarball(Path("mock_lasso_bundle"), raw_tar)
+            self.engine.redact_tarball(raw_tar, out_tar)
+
+            self.assertTrue(out_tar.exists())
+
+            # 1. Verify both manifest files exist in output directory
+            sec_manifest_path = out_dir / "lasso_reduction_manifest_security_donotshare.json"
+            sup_manifest_path = out_dir / "lasso_reduction_manifest_support.json"
+            self.assertTrue(sec_manifest_path.exists(), "Security manifest must exist in output")
+            self.assertTrue(sup_manifest_path.exists(), "Support manifest must exist in output")
+
+            # 2. Inspect support manifest: must NOT contain credentials
+            with open(sup_manifest_path) as f:
+                sup_data = json.load(f)
+
+            sup_str = json.dumps(sup_data)
+            self.assertNotIn("SuperSecretP@ssw0rd!", sup_str)
+            self.assertNotIn("BarmanVaultPass987!", sup_str)
+            self.assertNotIn("10.0.12.45", sup_str)
+            self.assertEqual(sup_data["manifest_type"], "support")
+            self.assertIn("pseudonymized_nodes", sup_data)
+
+            # 3. Inspect security manifest: contains internal audit trail and IP mapping
+            with open(sec_manifest_path) as f:
+                sec_data = json.load(f)
+
+            self.assertEqual(sec_data["manifest_type"], "security_donotshare")
+            self.assertIn("CONFIDENTIAL", sec_data["confidentiality"])
+            self.assertIn("10.0.12.45", sec_data["ip_mapping"])
+
+            # 4. Inspect tarball contents: security manifest must NOT be inside the archive sent to support!
+            with tarfile.open(out_tar, "r:gz") as tar:
+                names = tar.getnames()
+                self.assertTrue(any("lasso_reduction_manifest_support.json" in n for n in names))
+                self.assertFalse(any("security_donotshare" in n for n in names))
+
 
 if __name__ == "__main__":
     unittest.main()

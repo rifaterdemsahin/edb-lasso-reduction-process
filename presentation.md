@@ -238,11 +238,13 @@ A modular 4-stage pipeline that sanitizes bundles while retaining 100% diagnosti
 ├────────────────────────────────────────────────────────┤
 │ Stage 03: Deterministic IP Pseudonymization            │
 ├────────────────────────────────────────────────────────┤
-│ Stage 04: Audit Manifest Generation & Re-packing       │
+│ Stage 04: Dual Manifest Generation & Re-packing       │
 └────────────────────────────────────────────────────────┘
                │
-               ▼
-[Sanitized Bundle + lasso_reduction_manifest.json]
+               ├─────────────────────────────────────────┐
+               ▼                                         ▼
+   [Sanitized Bundle + Support Manifest]     [Security Manifest (DO NOT SHARE)]
+   (Zero credentials, safe for vendor)       (Internal SecOps forensic audit)
 ```
 
 ---
@@ -434,26 +436,25 @@ You will see:
 
 ## <span class="badge badge-how">HOW</span> Validating the Sanitized Output
 
-### Phase 3: Inspect Audit Manifest
+### Phase 3: Inspect Dual Audit Manifests
 ```bash
-cat sanitized_bundle/lasso_reduction_manifest.json | jq .category_breakdown
+# 1. Support Manifest (Zero credentials, safe to dispatch)
+cat output/lasso_reduction_manifest_support.json | jq .category_breakdown
+
+# 2. Security Manifest (Internal audit forensics - DO NOT SHARE)
+cat output/lasso_reduction_manifest_security_donotshare.json | jq .ip_mapping
 ```
 
-Sample audit output:
 ```json
 {
-  "title": "EDB Lasso Reduction Manifest",
+  "manifest_type": "support",
+  "confidentiality": "APPROVED FOR EXTERNAL SUPPORT SHARING",
   "total_redactions": 21,
-  "category_breakdown": {
-    "network": 13,
-    "credentials": 6,
-    "api_tokens": 2
-  },
-  "pseudonymized_ip_count": 6
+  "pseudonymized_nodes": ["PSEUDO_IP_NODE_01", "PSEUDO_IP_NODE_02"]
 }
 ```
 
-> **Infosec Rule:** If `"total_redactions": 0` on an archive containing secrets, abort transmission and investigate new pattern rules.
+> **Infosec Rule:** Ensure `security_donotshare` is retained internally; only the sanitized bundle and `support` manifest are dispatched to vendor support.
 
 ---
 
@@ -483,11 +484,11 @@ Why not simply replace all IPs with `XXX.XXX.XXX.XXX`?
 
 | Phase | Step | Command / Check |
 |---|---|---|
-| **1. Verification** | Run Unit Test Suite | `python3 test_lasso_redact.py` (Must pass 8/8) |
+| **1. Verification** | Run Unit Test Suite | `python3 test_lasso_redact.py` (Must pass 9/9) |
 | **2. Reduction** | Run Engine on Tarball | `python3 lasso_redact.py -i <in> -o <out>` |
 | **3. Nested Check** | Observe Node Logs | Ensure `[*] Processing nested archive:` appeared |
-| **4. Manifest** | Inspect Counts | Confirm `total_redactions > 0` |
-| **5. Evidence** | Attach Manifest | Upload `lasso_reduction_manifest.json` with ticket |
+| **4. Dual Manifest** | Check Manifests | Confirm `security_donotshare` & `support` created |
+| **5. Evidence** | Attach Manifest | Upload `lasso_reduction_manifest_support.json` |
 | **6. Cleanup** | Secure Staging Cleanup | Remove raw bundles from temporary directory |
 
 ---
@@ -498,4 +499,4 @@ Why not simply replace all IPs with `XXX.XXX.XXX.XXX`?
 1. **Compliance by Design:** Eliminates password leaks and network exposure before files leave your perimeter.
 2. **Recursive Archive Support:** Handles both outer `.tar.gz` and nested `.tar.bz2` node bundles.
 3. **Data Integrity Guarantee:** `shutil.copy2` fallback protects binary dumps and certificates from corruption.
-4. **Transparent Audit Trail:** Cryptographic and categorical manifest satisfies SOC 2 / ISO 27001 evidence requirements.
+4. **Dual-Manifest Architecture:** Generates `security_donotshare` for internal SecOps forensics and clean `support` manifest with zero credentials for vendor ticket evidence.

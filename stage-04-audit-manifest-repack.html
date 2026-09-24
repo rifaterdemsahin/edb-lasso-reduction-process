@@ -132,19 +132,27 @@
             <i class="fa-solid fa-receipt"></i>
           </div>
           <div>
-            <h3 class="font-bold text-white text-base">The Audit Trail Manifest</h3>
-            <span class="text-[10px] font-mono text-slate-400">lasso_reduction_manifest.json</span>
+            <h3 class="font-bold text-white text-base">Dual-Manifest Architecture</h3>
+            <span class="text-[10px] font-mono text-slate-400">Security vs. Support Manifests</span>
           </div>
         </div>
         <p class="text-xs text-slate-400 leading-relaxed mb-4">
-          Every secret detection is logged with its rule ID, file origin, and category. This provides compliance teams (SOC 2, PCI-DSS) verifiable proof that no credentials or private subnets were dispatched externally.
+          When the reduction engine packages the output, it creates <strong>two dedicated manifest files</strong>:
         </p>
-        <ul class="text-xs text-slate-300 space-y-2 font-mono">
-          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>Total Redactions Count</span></li>
-          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>Category &amp; Rule Tallies</span></li>
-          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>Deterministic IP Mapping Table</span></li>
-          <li class="flex items-center space-x-2"><i class="fa-solid fa-check text-emerald-400"></i><span>SHA-256 Output Integrity Hash</span></li>
-        </ul>
+        <div class="space-y-3 text-xs">
+          <div class="p-3 rounded-xl bg-red-950/30 border border-red-800/40">
+            <span class="font-bold text-red-400 font-mono text-[11px] block mb-1">1. lasso_reduction_manifest_security_donotshare.json</span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              <strong>Internal SecOps Only (CONFIDENTIAL):</strong> Retains exact unredacted matched pattern samples, line references, and the real-to-pseudonym IP mapping table for SOC 2 / ISO 27001 forensics. <em>Never shared externally.</em>
+            </p>
+          </div>
+          <div class="p-3 rounded-xl bg-sky-950/30 border border-sky-800/40">
+            <span class="font-bold text-sky-400 font-mono text-[11px] block mb-1">2. lasso_reduction_manifest_support.json</span>
+            <p class="text-slate-300 text-[11px] leading-relaxed">
+              <strong>Vendor Support Safe:</strong> Bundled inside the sanitized archive and output directory. Stripped of all plaintext credentials, tokens, hashes, and internal IP mappings. Proves sanitization without leaking secrets.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Repacking Engine -->
@@ -159,47 +167,75 @@
           </div>
         </div>
         <p class="text-xs text-slate-400 leading-relaxed mb-4">
-          The sanitized files are bundled alongside the audit manifest into a standard gzip tarball. The resulting file maintains the exact internal directory hierarchy expected by EDB portal automated intake parsers.
+          The sanitized files are bundled exclusively with the support-safe manifest into a standard gzip/bz2 tarball. The resulting bundle maintains the exact internal directory hierarchy expected by EDB portal intake parsers.
         </p>
         <pre class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-cyan-300 border border-slate-800"><code># Repack command executed automatically
-tar -czf lasso_sanitized.tar.gz \
-    -C sanitized_bundle .</code></pre>
+python3 lasso_redact.py -i raw.tar.gz -o output/bundle.tar.gz
+
+# Output contains:
+# output/bundle.tar.gz (Contains ONLY support-safe manifest)
+# output/lasso_reduction_manifest_support.json
+# output/lasso_reduction_manifest_security_donotshare.json</code></pre>
       </div>
     </div>
 
     <!-- Sample Manifest View -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-10">
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-file-code text-emerald-400"></i>
-          <span class="font-bold text-white text-sm">Example Reduction Manifest Output</span>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+            <span class="font-bold text-white text-sm">lasso_reduction_manifest_support.json</span>
+          </div>
+          <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">Support Safe</span>
         </div>
-        <span class="text-xs text-slate-400 font-mono">21 items sanitized</span>
-      </div>
-      <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-emerald-300/90 border border-slate-800 overflow-x-auto"><code>{
-  "title": "EDB Lasso Reduction Manifest",
-  "version": "1.0.0",
+        <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-sky-300/90 border border-slate-800 overflow-x-auto"><code>{
+  "title": "EDB Lasso Reduction Manifest (Support Safe)",
+  "manifest_type": "support",
+  "confidentiality": "APPROVED FOR EXTERNAL SUPPORT SHARING",
+  "compliance_status": "CREDENTIALS_AND_INTERNAL_IPS_REMOVED",
   "total_redactions": 21,
   "category_breakdown": {
     "network": 13,
     "credentials": 6,
     "api_tokens": 2
   },
-  "rule_breakdown": {
-    "INTERNAL_IP_MASK": 13,
-    "CONNINFO_PASSWORD": 4,
-    "MD5_PASSWORD": 1,
-    "URI_CREDENTIALS": 1,
-    "EDB_CUSTOMER_TOKEN": 1,
-    "GENERIC_API_KEY": 1
-  },
   "pseudonymized_ip_count": 6,
-  "ip_mapping_sample": {
-    "10.0.12.45": "PSEUDO_IP_NODE_01",
-    "10.0.12.46": "PSEUDO_IP_NODE_02",
-    "192.168.10.101": "PSEUDO_IP_NODE_03"
-  }
+  "pseudonymized_nodes": [
+    "PSEUDO_IP_NODE_01",
+    "PSEUDO_IP_NODE_02",
+    "PSEUDO_IP_NODE_03"
+  ]
 }</code></pre>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+            <span class="font-bold text-white text-sm">lasso_reduction_manifest_security_donotshare.json</span>
+          </div>
+          <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30">SecOps Only</span>
+        </div>
+        <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-red-300/90 border border-slate-800 overflow-x-auto"><code>{
+  "title": "EDB Lasso Reduction Security Manifest",
+  "manifest_type": "security_donotshare",
+  "confidentiality": "CONFIDENTIAL - INTERNAL SECURITY ONLY",
+  "warning": "DO NOT SHARE WITH VENDOR SUPPORT",
+  "total_redactions": 21,
+  "pseudonymized_ip_count": 6,
+  "ip_mapping": {
+    "10.0.12.45": "PSEUDO_IP_NODE_01",
+    "192.168.10.101": "PSEUDO_IP_NODE_02"
+  },
+  "records_sample": [
+    {
+      "rule_id": "CONNINFO_PASSWORD",
+      "matched_sample": "password=SuperSecretP@ssw0rd!..."
+    }
+  ]
+}</code></pre>
+      </div>
     </div>
 
     <!-- Navigation between Stages -->

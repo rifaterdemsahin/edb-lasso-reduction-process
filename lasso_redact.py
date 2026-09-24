@@ -188,7 +188,7 @@ class LassoReductionEngine:
             with tarfile.open(output_path, "w:bz2") as tar:
                 tar.add(tmp_out, arcname="")
 
-    def redact_directory(self, input_dir: Path, output_dir: Path) -> Dict[str, Any]:
+    def redact_directory(self, input_dir: Path, output_dir: Path, write_security_manifest: bool = True) -> Dict[str, Any]:
         """Recursively sanitizes a directory of EDB Lasso outputs."""
         input_dir = Path(input_dir)
         output_dir = Path(output_dir)
@@ -218,14 +218,22 @@ class LassoReductionEngine:
                 total_files += 1
                 total_redactions += redactions
 
-        manifest = self.generate_manifest(input_dir=str(input_dir), output_dir=str(output_dir))
-        with open(output_dir / "lasso_reduction_manifest.json", "w", encoding="utf-8") as mf:
-            json.dump(manifest, mf, indent=2)
+        support_manifest, _ = self.write_manifest_files(
+            target_dir=output_dir,
+            input_dir_str=str(input_dir),
+            output_dir_str=str(output_dir),
+            include_security=write_security_manifest
+        )
 
-        return manifest
+        return support_manifest
 
     def redact_tarball(self, tar_path: Path, output_tar_path: Path) -> Dict[str, Any]:
-        """Unpacks, sanitizes, and repacks a Lasso diagnostic .tar.gz bundle."""
+        """Unpacks, sanitizes, and repacks a Lasso diagnostic .tar.gz bundle.
+        Writes 2 manifest files in output:
+          1. security_donotshare (internal security audit with full forensics)
+          2. support (vendor support safe, stripped of all credentials)
+        Only the support manifest is packed into the sanitized tarball.
+        """
         import tempfile
         tar_path = Path(tar_path)
         output_tar_path = Path(output_tar_path)
@@ -234,17 +242,27 @@ class LassoReductionEngine:
             with tarfile.open(tar_path, "r:*") as tar:
                 tar.extractall(path=tmp_in)
 
-            manifest = self.redact_directory(Path(tmp_in), Path(tmp_out))
+            # Inside the tarball to be zipped, write only the support-safe manifest
+            support_manifest = self.redact_directory(Path(tmp_in), Path(tmp_out), write_security_manifest=False)
 
             output_tar_path.parent.mkdir(parents=True, exist_ok=True)
             mode = "w:bz2" if output_tar_path.name.endswith((".tar.bz2", ".tbz2")) else "w:gz"
             with tarfile.open(output_tar_path, mode) as tar:
                 tar.add(tmp_out, arcname="edb_lasso_redacted")
 
-        return manifest
+        # In the output directory alongside the zipped tarball, write BOTH manifest files
+        out_manifest_dir = output_tar_path.parent
+        self.write_manifest_files(
+            target_dir=out_manifest_dir,
+            input_dir_str=str(tar_path),
+            output_dir_str=str(output_tar_path),
+            include_security=True
+        )
 
-    def generate_manifest(self, input_dir: str = "", output_dir: str = "") -> Dict[str, Any]:
-        """Generates an audit manifest detailing all redacted occurrences."""
+        return support_manifest
+
+    def generate_security_manifest(self, input_dir: str = "", output_dir: str = "") -> Dict[str, Any]:
+        """Generates the full internal security audit manifest (DO NOT SHARE EXTERNALLY)."""
         summary_by_category: Dict[str, int] = {}
         summary_by_rule: Dict[str, int] = {}
 
@@ -255,17 +273,85 @@ class LassoReductionEngine:
             summary_by_rule[rule] = summary_by_rule.get(rule, 0) + 1
 
         return {
-            "title": "EDB Lasso Reduction Manifest",
-            "version": "1.0.0",
+            "title": "EDB Lasso Reduction Security Manifest (INTERNAL AUDIT ONLY)",
+            "manifest_type": "security_donotshare",
+            "confidentiality": "CONFIDENTIAL - INTERNAL SECURITY USE ONLY - DO NOT SHARE EXTERNALLY",
+            "warning": "DO NOT SHARE WITH VENDOR SUPPORT. Contains raw matched patterns and internal IP mappings for internal compliance auditing.",
+            "version": "2.0.0",
             "total_redactions": len(self.audit_records),
             "input_path": input_dir,
             "output_path": output_dir,
             "category_breakdown": summary_by_category,
             "rule_breakdown": summary_by_rule,
             "pseudonymized_ip_count": len(self.ip_map),
+            "ip_mapping": dict(self.ip_map),
             "ip_mapping_sample": {k: v for i, (k, v) in enumerate(self.ip_map.items()) if i < 10},
             "records_sample": self.audit_records[:50]
         }
+
+    def generate_support_manifest(self, input_dir: str = "", output_dir: str = "") -> Dict[str, Any]:
+        """Generates the vendor-support safe manifest with all credentials and sensitive mappings stripped."""
+        summary_by_category: Dict[str, int] = {}
+        summary_by_rule: Dict[str, int] = {}
+
+        for record in self.audit_records:
+            cat = record["category"]
+            rule = record["rule_id"]
+            summary_by_category[cat] = summary_by_category.get(cat, 0) + 1
+            summary_by_rule[rule] = summary_by_rule.get(rule, 0) + 1
+
+        # Sanitize sample records: strip any credentials or raw secret values
+        sanitized_sample = []
+        for rec in self.audit_records[:50]:
+            sanitized_sample.append({
+                "rule_id": rec["rule_id"],
+                "rule_name": rec["rule_name"],
+                "category": rec["category"],
+                "source": rec["source"],
+                "status": "REDACTED",
+                "matched_sample": "[REDACTED_CREDENTIAL]" if rec["category"] in ("credentials", "api_tokens", "certificates", "ecosystem") else "[PSEUDONYMIZED_IP]"
+            })
+
+        return {
+            "title": "EDB Lasso Reduction Manifest (Support Safe)",
+            "manifest_type": "support",
+            "confidentiality": "APPROVED FOR EXTERNAL SUPPORT SHARING",
+            "compliance_status": "CREDENTIALS_AND_INTERNAL_IPS_REMOVED",
+            "version": "2.0.0",
+            "total_redactions": len(self.audit_records),
+            "input_path": input_dir,
+            "output_path": output_dir,
+            "category_breakdown": summary_by_category,
+            "rule_breakdown": summary_by_rule,
+            "pseudonymized_ip_count": len(self.ip_map),
+            "pseudonymized_nodes": sorted(list(set(self.ip_map.values()))),
+            "records_sample": sanitized_sample
+        }
+
+    def generate_manifest(self, input_dir: str = "", output_dir: str = "") -> Dict[str, Any]:
+        """Backward-compatible default manifest generator (returns support-safe manifest)."""
+        return self.generate_support_manifest(input_dir=input_dir, output_dir=output_dir)
+
+    def write_manifest_files(self, target_dir: Path, input_dir_str: str, output_dir_str: str, include_security: bool = True) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """Writes both security_donotshare and support manifests to the destination."""
+        target_dir = Path(target_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        support_manifest = self.generate_support_manifest(input_dir_str, output_dir_str)
+        security_manifest = self.generate_security_manifest(input_dir_str, output_dir_str)
+
+        # 1. Write support manifests (zero credentials)
+        for name in ("lasso_reduction_manifest_support.json", "support_manifest.json", "lasso_reduction_manifest.json"):
+            with open(target_dir / name, "w", encoding="utf-8") as f:
+                json.dump(support_manifest, f, indent=2)
+
+        # 2. Write internal security audit manifests if requested
+        if include_security:
+            for name in ("lasso_reduction_manifest_security_donotshare.json", "security_donotshare_manifest.json"):
+                with open(target_dir / name, "w", encoding="utf-8") as f:
+                    json.dump(security_manifest, f, indent=2)
+
+        return support_manifest, security_manifest
 
 
 def create_mock_bundle_tarball(source_dir: Path, output_tar: Path) -> Path:
@@ -319,15 +405,22 @@ def main():
     else:
         # Single file
         engine.redact_file(input_path, output_path)
-        manifest = engine.generate_manifest(str(input_path), str(output_path))
-        with open(output_path.parent / "lasso_reduction_manifest.json", "w", encoding="utf-8") as mf:
-            json.dump(manifest, mf, indent=2)
+        manifest, _ = engine.write_manifest_files(
+            target_dir=output_path.parent,
+            input_dir_str=str(input_path),
+            output_dir_str=str(output_path),
+            include_security=True
+        )
 
+    manifest_dir = output_path.parent if output_path.is_file() else output_path
     print("\n[+] Reduction Completed Successfully!")
     print(f"    - Total Redacted Secrets: {manifest['total_redactions']}")
     print(f"    - Redactions by Category: {manifest['category_breakdown']}")
     print(f"    - Pseudonymized IPs: {manifest['pseudonymized_ip_count']}")
     print(f"    - Redacted Output Written To: {output_path}")
+    print(f"    - Manifests Generated:")
+    print(f"      * Support Manifest (Zero Credentials): {manifest_dir / 'lasso_reduction_manifest_support.json'}")
+    print(f"      * Security Manifest (Internal Audit):   {manifest_dir / 'lasso_reduction_manifest_security_donotshare.json'}")
 
 
 if __name__ == "__main__":
