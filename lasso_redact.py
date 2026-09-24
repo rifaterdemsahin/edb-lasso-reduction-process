@@ -152,17 +152,23 @@ class LassoReductionEngine:
         try:
             with open(file_path, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
-        except Exception as e:
-            print(f"[!] Warning: Could not read {file_path}: {e}")
+
+            redacted_content, matches = self.redact_text(
+                content,
+                source_identifier=file_path.name
+            )
+
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(redacted_content)
+
+            return len(matches)
+
+        except Exception:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(file_path, output_path)
             return 0
-
-        redacted_content, matches = self.redact_text(content, source_identifier=file_path.name)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(redacted_content)
-
-        return len(matches)
 
     def redact_nested_tar_bz2(self, archive_path: Path, output_path: Path):
         """Extract, redact and rebuild nested .tar.bz2 archives."""

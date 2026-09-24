@@ -104,6 +104,21 @@ class TestLassoReduction(unittest.TestCase):
             self.assertIn("[REDACTED_PASSWORD]", redacted_text)
             self.assertIn("PSEUDO_IP_NODE_", redacted_text)
 
+    def test_fallback_copy_on_read_failure(self):
+        import unittest.mock
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            sample_file = tmp_path / "sample.bin"
+            sample_data = b"\x00\x01\x02\xff\xfe\xfd"
+            sample_file.write_bytes(sample_data)
+
+            out_file = tmp_path / "out" / "sample.bin"
+            with unittest.mock.patch.object(self.engine, "redact_text", side_effect=Exception("Failed to parse")):
+                redactions = self.engine.redact_file(sample_file, out_file)
+                self.assertEqual(redactions, 0)
+                self.assertTrue(out_file.exists())
+                self.assertEqual(out_file.read_bytes(), sample_data)
+
 
 if __name__ == "__main__":
     unittest.main()
