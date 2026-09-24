@@ -77,6 +77,13 @@ const SEARCH_INDEX = [
     url: "index.html#cli-guide",
     description: "Command-line usage for python3 lasso_redact.py across directories and .tar.gz archives.",
     keywords: ["cli", "python", "terminal", "automation", "lasso_redact.py", "script"]
+  },
+  {
+    title: "Marp Presentation: Operational SOP (WHY, WHAT, HOW)",
+    category: "Presentation",
+    url: "presentation.html",
+    description: "Executive and operational presentation explaining why, what, and how the reduction engine works, with code evolution deep dive.",
+    keywords: ["marp", "presentation", "sop", "slides", "why", "what", "how", "operational procedure", "code", "architecture"]
   }
 ];
 
