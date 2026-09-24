@@ -107,7 +107,7 @@ style: |
   }
   header {
     font-size: 14px;
-    color: #475569;
+    color: #94a3b8;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -121,18 +121,12 @@ style: |
 
 <span class="badge badge-why">WHY</span> <span class="badge badge-what">WHAT</span> <span class="badge badge-how">HOW</span> <span class="badge badge-code">CODE EVOLUTION</span>
 
-<div style="margin-top: 24px;">
-  <a href="presentation.pdf" download="edb-lasso-reduction-procedure.pdf" style="display: inline-block; background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 18px; text-decoration: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);">
-    📄 Download Presentation PDF
-  </a>
-</div>
-
 **Author:** Enterprise DBA & Platform Operations  
 **Tool:** `lasso_redact.py` Engine (PoC)
 
 ---
 
-<header>Operational Context | Executive Summary</header>
+<!-- _header: "Operational Context | Executive Summary" -->
 
 ## The Enterprise Dilemma
 
@@ -171,7 +165,7 @@ PRESENTER SUBNOTES:
 
 ---
 
-<header>Operational Procedure | The WHY</header>
+<!-- _header: "Operational Procedure | The WHY" -->
 
 ## <span class="badge badge-why">WHY</span> Why Is This Procedure Mandatory?
 
@@ -197,7 +191,7 @@ PRESENTER SUBNOTES:
 
 ---
 
-<header>Compliance Standards | Frameworks Decoded</header>
+<!-- _header: "Compliance Standards | Frameworks Decoded" -->
 
 ## Regulatory Frameworks Explained
 
@@ -227,7 +221,7 @@ PRESENTER SUBNOTES & REGULATORY SCOPE:
 
 ---
 
-<header>Operational Procedure | The WHAT</header>
+<!-- _header: "Operational Procedure | The WHAT" -->
 
 ## <span class="badge badge-what">WHAT</span> What Is the Lasso Reduction Process?
 
@@ -253,7 +247,7 @@ A modular 4-stage pipeline that sanitizes bundles while retaining 100% diagnosti
 
 ---
 
-<header>Code Evolution | The Problem</header>
+<!-- _header: "Code Evolution | The Problem" -->
 
 ## <span class="badge badge-code">CODE</span> The Real-World Bug Uncovered
 
@@ -276,7 +270,7 @@ $ python3 lasso_redact.py -i lassoreport.tar.gz -o lassoreport_redacted.tar.gz
 
 ---
 
-<header>Code Deep Dive | Solution 1: Nested Archives</header>
+<!-- _header: "Code Deep Dive | Solution 1: Nested Archives" -->
 
 ## <span class="badge badge-code">CODE</span> Handling Nested `.tar.bz2` Archives
 
@@ -308,7 +302,7 @@ if file_name.endswith(".tar.bz2"):
 
 ---
 
-<header>Code Deep Dive | Solution 2: Binary Preservation</header>
+<!-- _header: "Code Deep Dive | Solution 2: Binary Preservation" -->
 
 ## <span class="badge badge-code">CODE</span> Preserving Binaries via `shutil.copy2`
 
@@ -345,7 +339,7 @@ PRESENTER SUBNOTES:
 
 ---
 
-<header>Prerequisites & Environment | Core Engine</header>
+<!-- _header: "Prerequisites & Environment | Core Engine" -->
 
 ## <span class="badge badge-how">HOW</span> Dependencies: Core Redaction Engine
 
@@ -382,7 +376,7 @@ PRESENTER SUBNOTES:
 
 ---
 
-<header>Prerequisites & Environment | Operational Tooling</header>
+<!-- _header: "Prerequisites & Environment | Operational Tooling" -->
 
 ## <span class="badge badge-how">HOW</span> What to Install: Auxiliary &amp; Docs
 
@@ -412,7 +406,7 @@ PRESENTER SUBNOTES:
 
 ---
 
-<header>Operational Procedure | The HOW (Step-by-Step SOP)</header>
+<!-- _header: "Operational Procedure | The HOW (Step-by-Step SOP)" -->
 
 ## <span class="badge badge-how">HOW</span> Standard Operating Procedure (SOP)
 
@@ -436,7 +430,7 @@ You will see:
 
 ---
 
-<header>Operational Procedure | Verification</header>
+<!-- _header: "Operational Procedure | Verification" -->
 
 ## <span class="badge badge-how">HOW</span> Validating the Sanitized Output
 
@@ -463,7 +457,7 @@ Sample audit output:
 
 ---
 
-<header>Deep Dive | Deterministic IP Mapping</header>
+<!-- _header: "Deep Dive | Deterministic IP Mapping" -->
 
 ## Deterministic IP Pseudonymization
 
@@ -483,7 +477,7 @@ Why not simply replace all IPs with `XXX.XXX.XXX.XXX`?
 
 ---
 
-<header>Operational Procedure | Operational Checklist</header>
+<!-- _header: "Operational Procedure | Operational Checklist" -->
 
 ## Pre-Transmission Checklist for DBAs
 
@@ -508,11 +502,10 @@ Why not simply replace all IPs with `XXX.XXX.XXX.XXX`?
 
 ---
 
-<header>Resources & Documentation</header>
+<!-- _header: "Resources & Documentation" -->
 
 ## Links & References
 
-- **Download Slide Deck (PDF):** [Download `presentation.pdf`](presentation.pdf)
 - **Web Dashboard:** [http://localhost:30088/index.html](http://localhost:30088/index.html)
 - **Interactive Presentation:** [http://localhost:30088/presentation.html](http://localhost:30088/presentation.html)
 - **Source Code:** [`lasso_redact.py`](file:///Users/rifaterdemsahin/projects/edb-lasso-reduction-process/lasso_redact.py)
