@@ -161,6 +161,14 @@ When high-severity incidents strike an **EDB Postgres** cluster (failovers, repl
 
 > **Resolution:** An automated, verifiable, deterministic redaction pipeline before external transfer.
 
+<!--
+PRESENTER SUBNOTES:
+- The core conflict is operational velocity vs. regulatory posture.
+- DBAs cannot wait weeks for Infosec approvals during P1 production downtime.
+- Infosec cannot permit plaintext passwords, SCRAM secrets, or private RFC 1918 internal IP maps to leave the corporate boundary.
+- The solution must be deterministic: identical inputs yield identical pseudonyms, preserving failover and replication graph integrity for support engineers.
+-->
+
 ---
 
 <header>Operational Procedure | The WHY</header>
@@ -179,6 +187,43 @@ Every Lasso report captures complete system configuration states:
    RFC 1918 addresses (`10.x.x.x`, `172.16.x.x`, `192.168.x.x`) that reveal internal VPC architectures.
 
 **The Risk:** Sending raw bundles exposes live database credentials and corporate network topology to external ticket portals and ticketing archives.
+
+<!--
+PRESENTER SUBNOTES:
+- PostgreSQL configurations routinely contain embedded authentication parameters in connection strings (e.g. repmgr, barman, primary_conninfo).
+- In addition, environmental variables captured by Lasso (`os_environment.txt`) frequently contain cloud access keys (AWS_SECRET_ACCESS_KEY), vendor tokens (EDB_CUSTOMER_TOKEN), and local user hashes.
+- External ticketing systems (Zendesk, Jira Service Desk, EDB Support Portal) store attachments across global data centers and vendor staff accounts, making unredacted logs an uncontrolled data sprawl vulnerability.
+-->
+
+---
+
+<header>Compliance Standards | Frameworks Decoded</header>
+
+## Regulatory Frameworks Explained
+
+| Acronym | Official Long Form | Regulatory Body & Core Mandate |
+|---|---|---|
+| **SOC 2** | **System and Organization Controls 2** | **AICPA** (American Institute of CPAs). Trust Services Criteria for **Security & Confidentiality** (CC6.1/CC6.7). |
+| **HIPAA** | **Health Insurance Portability and Accountability Act of 1996** | **U.S. HHS**. Technical Safeguards (45 CFR §164.312) protecting **Electronic Protected Health Information (ePHI)**. |
+| **PCI-DSS** | **Payment Card Industry Data Security Standard** | **PCI SSC**. Requirements 3, 6 & 8.2 prohibiting unmasked credentials and shared administrative secrets. |
+
+> **Compliance Impact:** Leaking live database passwords or internal routing subnets in support tickets is an audit failure, triggering mandatory customer notifications and potential financial penalties.
+
+<!--
+PRESENTER SUBNOTES & REGULATORY SCOPE:
+1. SOC 2: System and Organization Controls 2
+   - Authority: AICPA (American Institute of Certified Public Accountants).
+   - Core Criteria: Security, Availability, Processing Integrity, Confidentiality, and Privacy.
+   - Diagnostic Impact: Leaking configuration files containing secrets directly fails Trust Services Criterion CC6.1 (access controls) and CC6.7 (data transmission security).
+2. HIPAA: Health Insurance Portability and Accountability Act of 1996
+   - Authority: U.S. Department of Health and Human Services (HHS).
+   - Core Rules: Security Rule (45 CFR Part 160 and Part 164, Subparts A and C).
+   - Diagnostic Impact: Database credentials guarding electronic Protected Health Information (ePHI) cannot be transmitted in cleartext or across unvetted third-party ticketing platforms without violating federal breach reporting mandates.
+3. PCI-DSS: Payment Card Industry Data Security Standard
+   - Authority: PCI Security Standards Council (Visa, MasterCard, Amex, Discover, JCB).
+   - Core Requirements: Req 3 (protect stored cardholder data), Req 6 (secure coding/maintenance), Req 8.2 (strong user authentication and password controls).
+   - Diagnostic Impact: Cleartext transmission of production DB passwords fails Level 1-4 PCI merchant audits and risks card processing revocation.
+-->
 
 ---
 
@@ -290,6 +335,80 @@ def redact_file(self, file_path: Path, output_path: Path) -> int:
         shutil.copy2(file_path, output_path)
         return 0
 ```
+
+<!--
+PRESENTER SUBNOTES:
+- Notice how `shutil.copy2` preserves file creation, modification timestamps, and UNIX permissions (`stat` metadata).
+- If a database administrator attaches an SSL private certificate, a proprietary custom C-extension `.so` library, or an ELF core dump, the reduction engine does not mangle it into replacement unicode characters `\ufffd`.
+- It copies it cleanly byte-for-byte, avoiding corrupted diagnostic archives.
+-->
+
+---
+
+<header>Prerequisites & Environment | Core Engine</header>
+
+## <span class="badge badge-how">HOW</span> Dependencies: Core Redaction Engine
+
+### Zero External Pip Dependencies (Air-Gap Native)
+The `lasso_redact.py` engine is deliberately architected using **Python 3.8+ Standard Library only**:
+
+<div class="grid-2">
+  <div class="card">
+    <h3 style="color: #38bdf8;">📦 Standard Library Modules</h3>
+    <ul>
+      <li><code>tarfile</code> &amp; <code>tempfile</code> (Streaming archives)</li>
+      <li><code>shutil</code> &amp; <code>pathlib</code> (Byte fidelity copy)</li>
+      <li><code>re</code> &amp; <code>hashlib</code> (Pattern matching)</li>
+      <li><code>json</code> &amp; <code>argparse</code> (Manifest &amp; CLI)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="color: #22c55e;">🛡️ Operational Advantages</h3>
+    <ul>
+      <li><strong>Zero <code>pip install</code>:</strong> No internet access required</li>
+      <li><strong>Jumpbox Safe:</strong> Works on locked down VPC bastions</li>
+      <li><strong>Supply Chain Immune:</strong> No malicious PyPI packages</li>
+      <li><strong>Cross-Platform:</strong> Runs identically on Linux, Mac, Win</li>
+    </ul>
+  </div>
+</div>
+
+<!--
+PRESENTER SUBNOTES:
+- Emphasize the Zero-Dependency design choice.
+- Enterprise DBAs often operate in air-gapped financial or healthcare enclaves where `pip install` is blocked by corporate proxies or firewalls.
+- By relying strictly on Python 3 built-in modules (`tarfile`, `tempfile`, `shutil`, `re`, `json`), `lasso_redact.py` runs on any stock Linux distribution out of the box without requiring IT tickets to install third-party packages.
+-->
+
+---
+
+<header>Prerequisites & Environment | Operational Tooling</header>
+
+## <span class="badge badge-how">HOW</span> What to Install: Auxiliary &amp; Docs
+
+To run automated checks, audit manifest parsing, and slide compilation:
+
+```bash
+# 1. Ubuntu / Debian / EDB Linux Host
+sudo apt-get update && sudo apt-get install -y python3 jq tar bzip2 gzip nodejs npm chromium-browser
+
+# 2. RHEL 8/9 / Rocky Linux / AlmaLinux
+sudo dnf install -y python3 jq tar bzip2 gzip nodejs npm chromium
+
+# 3. macOS (Homebrew)
+brew install python jq node @marp-team/marp-cli
+```
+
+### Presentation & PDF Compilation Stack:
+- **Node.js (v18+) & npm:** Powers the Marp presentation engine.
+- **Marp CLI:** `npx @marp-team/marp-cli presentation.md --html -o presentation.html`
+- **Headless Chrome / Chromium:** Generates publication-ready `presentation.pdf`.
+
+<!--
+PRESENTER SUBNOTES:
+- `jq` is strongly recommended for operations scripts because it allows CI/CD pipelines to query `total_redactions` automatically (e.g. `jq .total_redactions manifest.json`).
+- If deploying in headless CI/CD (GitHub Actions, GitLab CI), installing `chromium` allows the automatic compilation of PDFs alongside HTML documentation on every git push.
+-->
 
 ---
 
