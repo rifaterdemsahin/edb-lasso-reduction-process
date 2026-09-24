@@ -378,30 +378,30 @@ PRESENTER SUBNOTES:
 
 <!-- _header: "Prerequisites & Environment | Operational Tooling" -->
 
-## <span class="badge badge-how">HOW</span> What to Install: Auxiliary &amp; Docs
+## <span class="badge badge-how">HOW</span> What to Install: Auxiliary Tools
 
-To run automated checks, audit manifest parsing, and slide compilation:
+To run automated checks, inspect archives, and parse audit manifests:
 
 ```bash
 # 1. Ubuntu / Debian / EDB Linux Host
-sudo apt-get update && sudo apt-get install -y python3 jq tar bzip2 gzip nodejs npm chromium-browser
+sudo apt-get update && sudo apt-get install -y python3 jq tar bzip2 gzip
 
 # 2. RHEL 8/9 / Rocky Linux / AlmaLinux
-sudo dnf install -y python3 jq tar bzip2 gzip nodejs npm chromium
+sudo dnf install -y python3 jq tar bzip2 gzip
 
 # 3. macOS (Homebrew)
-brew install python jq node @marp-team/marp-cli
+brew install python jq
 ```
 
-### Presentation & PDF Compilation Stack:
-- **Node.js (v18+) & npm:** Powers the Marp presentation engine.
-- **Marp CLI:** `npx @marp-team/marp-cli presentation.md --html -o presentation.html`
-- **Headless Chrome / Chromium:** Generates publication-ready `presentation.pdf`.
+### Operational Toolkit Overview:
+- **`python3` (v3.8+):** Executes the redaction engine and automated test suite.
+- **`jq`:** Command-line JSON processor to query audit manifest statistics.
+- **`tar`, `bzip2`, `gzip`:** Standard archive utilities for bundle inspection.
 
 <!--
 PRESENTER SUBNOTES:
 - `jq` is strongly recommended for operations scripts because it allows CI/CD pipelines to query `total_redactions` automatically (e.g. `jq .total_redactions manifest.json`).
-- If deploying in headless CI/CD (GitHub Actions, GitLab CI), installing `chromium` allows the automatic compilation of PDFs alongside HTML documentation on every git push.
+- All tools listed are standard operating system packages available across all enterprise Linux distributions.
 -->
 
 ---
@@ -499,15 +499,3 @@ Why not simply replace all IPs with `XXX.XXX.XXX.XXX`?
 2. **Recursive Archive Support:** Handles both outer `.tar.gz` and nested `.tar.bz2` node bundles.
 3. **Data Integrity Guarantee:** `shutil.copy2` fallback protects binary dumps and certificates from corruption.
 4. **Transparent Audit Trail:** Cryptographic and categorical manifest satisfies SOC 2 / ISO 27001 evidence requirements.
-
----
-
-<!-- _header: "Resources & Documentation" -->
-
-## Links & References
-
-- **Web Dashboard:** [http://localhost:30088/index.html](http://localhost:30088/index.html)
-- **Interactive Presentation:** [http://localhost:30088/presentation.html](http://localhost:30088/presentation.html)
-- **Source Code:** [`lasso_redact.py`](file:///Users/rifaterdemsahin/projects/edb-lasso-reduction-process/lasso_redact.py)
-- **Test Suite:** [`test_lasso_redact.py`](file:///Users/rifaterdemsahin/projects/edb-lasso-reduction-process/test_lasso_redact.py)
-- **GitHub Repository:** [https://github.com/rifaterdemsahin/edb-lasso-reduction-process](https://github.com/rifaterdemsahin/edb-lasso-reduction-process)
