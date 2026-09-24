@@ -121,6 +121,12 @@ style: |
 
 <span class="badge badge-why">WHY</span> <span class="badge badge-what">WHAT</span> <span class="badge badge-how">HOW</span> <span class="badge badge-code">CODE EVOLUTION</span>
 
+<div style="margin-top: 24px;">
+  <a href="presentation.pdf" download="edb-lasso-reduction-procedure.pdf" style="display: inline-block; background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 18px; text-decoration: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);">
+    📄 Download Presentation PDF
+  </a>
+</div>
+
 **Author:** Enterprise DBA & Platform Operations  
 **Tool:** `lasso_redact.py` Engine (PoC)
 
@@ -387,6 +393,7 @@ Why not simply replace all IPs with `XXX.XXX.XXX.XXX`?
 
 ## Links & References
 
+- **Download Slide Deck (PDF):** [Download `presentation.pdf`](presentation.pdf)
 - **Web Dashboard:** [http://localhost:30088/index.html](http://localhost:30088/index.html)
 - **Interactive Presentation:** [http://localhost:30088/presentation.html](http://localhost:30088/presentation.html)
 - **Source Code:** [`lasso_redact.py`](file:///Users/rifaterdemsahin/projects/edb-lasso-reduction-process/lasso_redact.py)

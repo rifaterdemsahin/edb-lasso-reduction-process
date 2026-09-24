@@ -93,9 +93,14 @@
           <span>Comparison</span>
         </a>
 
-        <a href="presentation.html" class="px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 transition flex items-center space-x-1.5 font-semibold">
+        <a href="#presentation" class="px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition flex items-center space-x-1.5 font-semibold">
           <i class="fa-solid fa-person-chalkboard text-purple-400"></i>
           <span>Presentation</span>
+        </a>
+
+        <a href="presentation.pdf" download="edb-lasso-reduction-procedure.pdf" class="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition flex items-center space-x-1.5 font-semibold shadow-sm" title="Download Presentation PDF">
+          <i class="fa-solid fa-file-pdf text-red-400"></i>
+          <span>PDF</span>
         </a>
 
         <a href="#sandbox" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition hidden lg:inline">Sandbox</a>
@@ -143,9 +148,13 @@
             <i class="fa-solid fa-wand-magic-sparkles"></i>
             <span>Try Interactive Sanitizer</span>
           </a>
-          <a href="#reduction-pipeline" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold border border-slate-700 transition flex items-center space-x-2">
-            <i class="fa-solid fa-diagram-project"></i>
-            <span>Explore Architecture</span>
+          <a href="#presentation" class="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-lg shadow-purple-600/30 transition flex items-center space-x-2">
+            <i class="fa-solid fa-person-chalkboard"></i>
+            <span>View Presentation</span>
+          </a>
+          <a href="presentation.pdf" download="edb-lasso-reduction-procedure.pdf" class="px-6 py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold transition flex items-center space-x-2 shadow-lg shadow-red-600/30">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>Download PDF</span>
           </a>
         </div>
       </div>
@@ -503,6 +512,92 @@
           <pre class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-purple-300 border border-slate-800 overflow-x-auto"><code>python3 lasso_redact.py \
   -i lasso_diagnostic_20260916.tar.gz \
   -o lasso_diagnostic_20260916_redacted.tar.gz</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Operational Procedure & Marp Presentation Section -->
+  <section id="presentation" class="py-16 bg-slate-900 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-3">
+            <i class="fa-solid fa-person-chalkboard"></i>
+            <span>Standard Operating Procedure (SOP)</span>
+          </div>
+          <h2 class="text-3xl font-bold text-white mt-1">Operational Procedure Presentation: WHY, WHAT &amp; HOW</h2>
+          <p class="text-slate-400 mt-2 text-sm max-w-3xl">
+            Interactive Marp presentation explaining enterprise compliance mandates, the 4-stage reduction pipeline, recursive nested archive handling (<code class="text-cyan-400">.tar.bz2</code>), and byte-for-byte binary preservation with <code class="text-cyan-400">shutil.copy2</code>.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <a href="presentation.pdf" download="edb-lasso-reduction-procedure.pdf" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-xs transition flex items-center space-x-2 shadow-lg shadow-red-600/30">
+            <i class="fa-solid fa-file-pdf text-sm"></i>
+            <span>Download Presentation PDF</span>
+          </a>
+          <a href="presentation.html" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition flex items-center space-x-2">
+            <i class="fa-solid fa-expand"></i>
+            <span>Fullscreen Slides</span>
+          </a>
+          <a href="presentation.md" target="_blank" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 font-semibold text-xs border border-slate-700 transition flex items-center space-x-2">
+            <i class="fa-brands fa-markdown"></i>
+            <span>Raw Marp MD</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Embedded Marp Slide Deck Viewer -->
+      <div class="relative w-full rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl shadow-black/80 bg-slate-950 mb-6" style="aspect-ratio: 16 / 9; max-height: 720px;">
+        <iframe src="presentation.html" title="EDB Lasso Reduction Process SOP Presentation" class="w-full h-full border-0" allow="fullscreen" loading="lazy"></iframe>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 px-2 mb-8 gap-2">
+        <div class="flex items-center space-x-3">
+          <span><i class="fa-solid fa-keyboard mr-1 text-slate-500"></i> Navigation: <strong>Left / Right Arrows</strong> or <strong>Spacebar</strong></span>
+          <span>•</span>
+          <span><strong>F</strong> for Fullscreen</span>
+          <span>•</span>
+          <span><strong>O</strong> for Slide Overview</span>
+        </div>
+        <div>
+          <a href="presentation.pdf" download="edb-lasso-reduction-procedure.pdf" class="text-red-400 hover:text-red-300 font-semibold flex items-center space-x-1.5">
+            <i class="fa-solid fa-arrow-down-to-line"></i>
+            <span>Need offline slides? Download the PDF version</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 3 Pillar Framework Cards (WHY, WHAT, HOW) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-2xl bg-slate-950/80 border border-slate-800">
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold mb-3">
+            <span>WHY</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Zero-Trust &amp; Compliance</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Sharing diagnostic dumps containing plaintext passwords, connection strings, SCRAM hashes, and RFC 1918 IPs violates SOC 2, HIPAA, and PCI-DSS. Redaction is required before transferring files across enterprise boundaries.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-950/80 border border-slate-800">
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-bold mb-3">
+            <span>WHAT</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Engine Architecture &amp; Fixes</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            The 4-stage pipeline recursively unpacks nested <code class="text-cyan-300">.tar.bz2</code> node archives, scrubs secrets, pseudonymizes node IPs deterministically, and preserves raw binary dumps with <code class="text-cyan-300">shutil.copy2</code>.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-950/80 border border-slate-800">
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold mb-3">
+            <span>HOW</span>
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Step-by-Step DBA Runbook</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            A standardized standard operating procedure: capture bundle via <code class="text-emerald-300">lasso</code>, run <code class="text-emerald-300">lasso_redact.py</code>, verify the audit manifest breakdown, and submit sanitized output alongside ticket evidence.
+          </p>
         </div>
       </div>
     </div>
