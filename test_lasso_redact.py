@@ -69,6 +69,41 @@ class TestLassoReduction(unittest.TestCase):
             self.assertTrue(out_tar.exists())
             self.assertGreater(manifest["total_redactions"], 0)
 
+    def test_nested_tar_bz2_redaction(self):
+        import tarfile
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            nested_src = tmp_path / "nested_src"
+            nested_src.mkdir()
+            sample_conf = nested_src / "postgresql.conf"
+            sample_conf.write_text("password = 'NestedSecretPassword123!'\nhost = 192.168.1.99")
+
+            # Create a nested .tar.bz2
+            bundle_dir = tmp_path / "bundle"
+            bundle_dir.mkdir()
+            nested_bz2 = bundle_dir / "edb-lasso-nested.tar.bz2"
+            with tarfile.open(nested_bz2, "w:bz2") as tar:
+                tar.add(sample_conf, arcname="postgresql.conf")
+
+            # Run reduction on the bundle containing the nested archive
+            out_bundle = tmp_path / "sanitized_bundle"
+            manifest = self.engine.redact_directory(bundle_dir, out_bundle)
+
+            # Verify that the nested .tar.bz2 was recreated
+            sanitized_bz2 = out_bundle / "edb-lasso-nested.tar.bz2"
+            self.assertTrue(sanitized_bz2.exists())
+            self.assertGreater(manifest["total_redactions"], 0)
+
+            # Unpack the sanitized nested archive and inspect contents
+            extracted_check = tmp_path / "extracted_check"
+            with tarfile.open(sanitized_bz2, "r:bz2") as tar:
+                tar.extractall(extracted_check)
+
+            redacted_text = (extracted_check / "postgresql.conf").read_text()
+            self.assertNotIn("NestedSecretPassword123!", redacted_text)
+            self.assertIn("[REDACTED_PASSWORD]", redacted_text)
+            self.assertIn("PSEUDO_IP_NODE_", redacted_text)
+
 
 if __name__ == "__main__":
     unittest.main()

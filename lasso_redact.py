@@ -15,6 +15,7 @@ import json
 import tarfile
 import argparse
 import hashlib
+import shutil
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
 
@@ -163,6 +164,24 @@ class LassoReductionEngine:
 
         return len(matches)
 
+    def redact_nested_tar_bz2(self, archive_path: Path, output_path: Path):
+        """Extract, redact and rebuild nested .tar.bz2 archives."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp_in, tempfile.TemporaryDirectory() as tmp_out:
+            with tarfile.open(archive_path, "r:bz2") as tar:
+                tar.extractall(tmp_in)
+
+            self.redact_directory(
+                Path(tmp_in),
+                Path(tmp_out)
+            )
+
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with tarfile.open(output_path, "w:bz2") as tar:
+                tar.add(tmp_out, arcname="")
+
     def redact_directory(self, input_dir: Path, output_dir: Path) -> Dict[str, Any]:
         """Recursively sanitizes a directory of EDB Lasso outputs."""
         input_dir = Path(input_dir)
@@ -177,6 +196,17 @@ class LassoReductionEngine:
                 rel_path = Path(root).relative_to(input_dir) / file_name
                 src_file = input_dir / rel_path
                 dest_file = output_dir / rel_path
+
+                if file_name.endswith(".tar.bz2"):
+                    print(f"[*] Processing nested archive: {src_file}")
+
+                    self.redact_nested_tar_bz2(
+                        src_file,
+                        dest_file
+                    )
+
+                    total_files += 1
+                    continue
 
                 redactions = self.redact_file(src_file, dest_file)
                 total_files += 1
@@ -201,7 +231,8 @@ class LassoReductionEngine:
             manifest = self.redact_directory(Path(tmp_in), Path(tmp_out))
 
             output_tar_path.parent.mkdir(parents=True, exist_ok=True)
-            with tarfile.open(output_tar_path, "w:gz") as tar:
+            mode = "w:bz2" if output_tar_path.name.endswith((".tar.bz2", ".tbz2")) else "w:gz"
+            with tarfile.open(output_tar_path, mode) as tar:
                 tar.add(tmp_out, arcname="edb_lasso_redacted")
 
         return manifest
@@ -271,7 +302,11 @@ def main():
 
     print(f"[*] Starting EDB Lasso Reduction on: {input_path}")
 
-    if input_path.is_file() and (input_path.name.endswith(".tar.gz") or input_path.name.endswith(".tgz")):
+    if input_path.is_file() and (
+        input_path.name.endswith(".tar.gz") or
+        input_path.name.endswith(".tgz") or
+        input_path.name.endswith(".tar.bz2")
+    ):
         manifest = engine.redact_tarball(input_path, output_path)
     elif input_path.is_dir():
         manifest = engine.redact_directory(input_path, output_path)
