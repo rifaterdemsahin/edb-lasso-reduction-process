@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rifaterdemsahin.github.io/edb-lasso-reduction-process/sitemap.xml

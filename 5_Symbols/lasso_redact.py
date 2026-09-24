@@ -374,7 +374,12 @@ def main():
     args = parser.parse_args()
 
     if args.create_mock_tarball:
-        src = Path("mock_lasso_bundle")
+        project_root = Path(__file__).resolve().parent.parent
+        src = project_root / "3_Simulation" / "mock_lasso_bundle"
+        if not src.exists():
+            src = Path("3_Simulation/mock_lasso_bundle")
+        if not src.exists():
+            src = Path("mock_lasso_bundle")
         dest = Path(args.create_mock_tarball)
         print(f"[*] Packaging mock diagnostic bundle into: {dest}")
         create_mock_bundle_tarball(src, dest)

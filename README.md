@@ -53,36 +53,33 @@ The **EDB Lasso Reduction Process** provides an automated, deterministic sanitiz
 
 ## 🧠 Architecture & Enterprise Debugging Lifecycle
 
-Explore the full interactive architecture page and diagram at **[Architecture & Debugging Flow](architecture.html)**.
-Download the raw diagram: **[`architecture-mindmap.excalidraw`](architecture-mindmap.excalidraw)** (openable on [Excalidraw](https://excalidraw.com)).
+Explore the full interactive architecture page and diagram at **[Architecture & Debugging Flow](5_Symbols/architecture.html)**.
+Download the raw diagram: **[`architecture-mindmap.excalidraw`](2_Environment/architecture-mindmap.excalidraw)** (openable on [Excalidraw](https://excalidraw.com)).
 
 ### What Happens During an Enterprise Debugging Session with EDB:
 1. **Production Incident Trigger**: Monitoring alerts on replication lag, failover flapping in EFM, or query throttling. Severity 1 triage declared.
 2. **Diagnostic Capture via EDB Lasso**: DBA runs `sudo -u postgres lasso --no-upload` to extract lock-free metrics from PostgreSQL, OS sysctl, and Barman without touching table rows.
 3. **Lasso Reduction Process**: Passwords in `primary_conninfo`, MD5/SCRAM hashes, and customer tokens are stripped. Internal IPs are deterministically mapped to `PSEUDO_IP_NODE_xx` aliases.
-4. **SecOps & Infosec Clearance**: The cryptographic `lasso_reduction_manifest.json` is reviewed, verifying zero credential or topology leakage.
+4. **SecOps & Infosec Clearance**: Dual manifests are generated: `lasso_reduction_manifest_security_donotshare.json` for internal forensics, and clean `lasso_reduction_manifest_support.json` for support dispatch.
 5. **EDB Support Portal Intake**: The sanitized `.tar.gz` bundle is uploaded to the EDB Support case ticket, starting the SLA response clock.
 6. **Collaborative Root Cause Analysis (RCA)**: EDB engineers analyze standardized telemetry without iterative log ping-pong, correlating OS I/O spikes with WAL generation.
 7. **Remediation & Patching**: Production parameter adjustments applied, verified, and post-mortem documented.
 
 ---
 
-## ⚙️ Architecture & Features
+## 🏛️ Delivery Pilot 7-Stage Project Structure
 
-```
-+--------------------------+       +-----------------------------------+       +-------------------------------+
-| Raw EDB Lasso Artifacts  | ----> |   Lasso Reduction Engine          | ----> | Sanitized Diagnostic Bundle   |
-| (Configs, Tarball, Logs) |       |   - Credential Stripping          |       | - Clean Configs & Logs        |
-+--------------------------+       |   - Deterministic IP Masking      |       | - Cryptographic Manifest      |
-                                   |   - Audit Logging & Verification  |       |   (lasso_reduction_manifest)  |
-                                   +-----------------------------------+       +-------------------------------+
-```
+This project follows the **Delivery Pilot Template** standard operating model (`RULE-001` through `RULE-005`):
 
-1. **Deterministic Pseudonymization**: Maps IP addresses consistently (e.g. `10.0.12.45` -> `PSEUDO_IP_NODE_01`) across all files in the bundle, preserving cluster topology and replication relationships without revealing internal network addressing.
-2. **Multi-layer Secret Masking**: Strips plaintext passwords, SCRAM secrets, MD5 hashes, URI credentials, API tokens, and EDB customer keys.
-3. **Audit Manifest Generation**: Creates a structured `lasso_reduction_manifest.json` detailing exact counts, categories, and proof of sanitization for compliance audits.
-4. **Tarball Support**: Direct unpack, sanitization, and repacking of `.tar.gz` Lasso bundles.
-5. **Interactive Web Sandbox**: Built-in browser-based simulator (`index.html`) to preview and test reduction rules instantly.
+| Stage | Folder | Role & Content |
+|---|---|---|
+| **1. Real Unknown** | [`1_Real_Unknown/`](1_Real_Unknown/) | Problem statements, OKRs, tasks, prompt history, risk register |
+| **2. Environment** | [`2_Environment/`](2_Environment/) | Architecture blueprints, tools, setup guides (Mac/Windows/Azure/Fly/Cloudflare) |
+| **3. Simulation** | [`3_Simulation/`](3_Simulation/) | Mock bundle data, presentation deck, slide images, carousel assets |
+| **4. Formula** | [`4_Formula/`](4_Formula/) | Technical specifications (`specs.md`), reasoning logs (`llm_thinking_log.md`), decisions |
+| **5. Symbols** | [`5_Symbols/`](5_Symbols/) | Diagnostic redactor engine (`lasso_redact.py`), rules, portal UI pages, search.js |
+| **6. Semblance** | [`6_Semblance/`](6_Semblance/) | Error log, fix log, gap analysis, workarounds, lessons learned |
+| **7. Testing Known** | [`7_Testing_Known/`](7_Testing_Known/) | Test suites (`test_lasso_redact.py`), smoke tests, validation reports, sanity data |
 
 ---
 
@@ -90,19 +87,19 @@ Download the raw diagram: **[`architecture-mindmap.excalidraw`](architecture-min
 
 | Stage | Name | Description | Page |
 | :--- | :--- | :--- | :--- |
-| **01** | **Ingestion & Unpack** | Extracts the EDB Lasso tarball (`.tar.gz`) or output directory without altering raw file permissions or leaking intermediate state. | [Stage 01](stage-01-ingestion-unpack.html) |
-| **02** | **Credential Stripping** | Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens. | [Stage 02](stage-02-credential-stripping.html) |
-| **03** | **Deterministic IP Mapping** | Maps internal IP addresses (e.g. `10.0.12.45`) to consistent aliases (`PSEUDO_IP_NODE_01`) preserving cluster topology. | [Stage 03](stage-03-deterministic-ip-mapping.html) |
-| **04** | **Audit Manifest & Repack** | Generates `lasso_reduction_manifest.json` detailing redaction tallies and produces a sanitized archive. | [Stage 04](stage-04-audit-manifest-repack.html) |
+| **01** | **Ingestion & Unpack** | Extracts the EDB Lasso tarball (`.tar.gz`) or output directory without altering raw file permissions or leaking intermediate state. | [Stage 01](5_Symbols/stage-01-ingestion-unpack.html) |
+| **02** | **Credential Stripping** | Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens. | [Stage 02](5_Symbols/stage-02-credential-stripping.html) |
+| **03** | **Deterministic IP Mapping** | Maps internal IP addresses (e.g. `10.0.12.45`) to consistent aliases (`PSEUDO_IP_NODE_01`) preserving cluster topology. | [Stage 03](5_Symbols/stage-03-deterministic-ip-mapping.html) |
+| **04** | **Audit Manifest & Repack** | Generates dual manifests (`security_donotshare` vs `support`) and produces a sanitized archive. | [Stage 04](5_Symbols/stage-04-audit-manifest-repack.html) |
 
 ### 🔍 Side-by-Side Comparison Tool
-Visit the dedicated [Side-by-Side Comparison Page](comparison.html) to view side-by-side split diffs of raw Lasso configs vs. sanitized outputs with highlighted secrets.
+Visit the dedicated [Side-by-Side Comparison Page](5_Symbols/comparison.html) to view side-by-side split diffs of raw Lasso configs vs. sanitized outputs with highlighted secrets.
 
 ---
 
 ## 📦 Creating the EDB Lasso Tarball (`.tar.gz`)
 
-For complete details, visit the interactive guide at [Create EDB Lasso Tarball](create-lasso-tarball.html).
+For complete details, visit the interactive guide at [Create EDB Lasso Tarball](5_Symbols/create-lasso-tarball.html).
 
 ### 1. From the CLI
 ```bash
@@ -117,20 +114,8 @@ sudo -u postgres lasso \
 sudo -u postgres lasso -U postgres -d postgres --days 2 -o /tmp/edb_lasso_recent.tar.gz
 
 # Pack mock bundle using the PoC engine
-python3 lasso_redact.py --create-mock-tarball mock_lasso_bundle.tar.gz
+python3 5_Symbols/lasso_redact.py --create-mock-tarball 3_Simulation/mock_lasso_bundle.tar.gz
 ```
-
-### 2. What to Expect
-* **Archive Format**: Standard `.tar.gz` with subdirectories `system/`, `postgresql/`, `barman/`, and `metadata.json`.
-* **Runtime Duration**: 30 seconds to 3 minutes depending on I/O.
-* **File Size**: Typically 5 MB to 35 MB compressed.
-* **Workload Impact**: Near-zero overhead. Lock-free queries, zero customer table rows extracted.
-
-### 3. What to Care About & Watch Out For (Gotchas)
-* ⚠️ **Raw Secret Exposure**: Lasso copies `postgresql.conf` and `barman.conf` verbatim. Plaintext replication passwords (`primary_conninfo`) and backup keys **are stored in the raw archive**!
-* ⚠️ **Log File Bloat**: Unrotated log directories can expand the bundle to tens of gigabytes; always specify `--days 2`.
-* ⚠️ **Sudo & Catalog Permissions**: Running as a normal user will cause blank metrics; run with `sudo -u postgres`.
-* ⚠️ **Network Egress**: Port 443 firewall restrictions will cause `--upload` to hang; collect offline and sanitize locally first.
 
 ---
 
@@ -138,20 +123,26 @@ python3 lasso_redact.py --create-mock-tarball mock_lasso_bundle.tar.gz
 
 ### 1. Run Unit & Integration Tests
 ```bash
-python3 test_lasso_redact.py
+python3 7_Testing_Known/test_lasso_redact.py
 ```
 
 ### 2. Sanitize a Diagnostic Directory
 ```bash
-python3 lasso_redact.py -i mock_lasso_bundle -o sanitized_bundle
+python3 5_Symbols/lasso_redact.py -i 3_Simulation/mock_lasso_bundle -o sanitized_bundle
 ```
 
 ### 3. Sanitize a Compressed Tarball
 ```bash
-python3 lasso_redact.py -i lasso_archive.tar.gz -o lasso_archive_sanitized.tar.gz
+python3 5_Symbols/lasso_redact.py -i lasso_archive.tar.gz -o lasso_archive_sanitized.tar.gz
 ```
 
-### 4. Run the Local Interactive Web UI
+### 4. Run Smoke Test & Nav Sync
+```bash
+python3 5_Symbols/toolbox/nav_sync.py
+python3 5_Symbols/toolbox/smoke_test.py
+```
+
+### 5. Run the Local Interactive Web UI
 ```bash
 python3 -m http.server 30088
 open -a "Google Chrome" http://localhost:30088

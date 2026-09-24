@@ -1,0 +1,46 @@
+# 🛠 Fix Log — Delivery Pilot Template
+
+## Format
+Each entry follows: `[DATE] [STAGE] [STATUS] — Fix description`
+
+Status: `APPLIED` | `VERIFIED` | `WORKAROUND` | `PENDING`
+
+---
+
+## Fix Entries
+
+<!-- Add new entries below this line, newest first -->
+
+[2026-06-02] [SETUP] [APPLIED] — fix.log initialized. Linked to error.log for cross-referencing.
+
+---
+
+## How to Use
+
+1. When a fix is applied, log it here with the matching date + stage from `error.log`.
+2. Mark status as `WORKAROUND` if a proper fix is deferred.
+3. Once verified in `7_Testing_Known`, update status to `VERIFIED`.
+
+## Fix → Test Pipeline
+
+```
+error.log entry
+    ↓
+Root cause analysis (gap_analysis.md)
+    ↓
+Fix applied → fix.log entry (APPLIED)
+    ↓
+Validation in 7_Testing_Known
+    ↓
+fix.log entry updated (VERIFIED)
+    ↓
+Lesson captured in lessons_learned.md
+```
+
+## Cross-Reference Index
+
+| Error Date | Stage | Error Summary | Fix Status |
+|------------|-------|---------------|------------|
+| 2026-06-02 | SETUP | Initialization | APPLIED |
+[2026-07-12] [6_Semblance] [APPLIED] — Fix for smoke test failure #1: stage folder header links in the debug menu now point at each stage README.md instead of bare directory URLs (which 404 on GitHub Pages); redundant Overview entries and bare toolbox dir link removed. Synced across navigation_config.json, index.html, markdown_renderer.html. Verified: 10/10 local + 11/11 cloud smoke tests pass.
+[2026-07-12] [6_Semblance] [VERIFIED] — Fix for smoke test failure #1 validated in 7_Testing_Known: SPEC-008 runner passes 10/10 local and 11/11 against the deployed GitHub Pages site. Issue #1 closed.

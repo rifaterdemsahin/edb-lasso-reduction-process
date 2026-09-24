@@ -6,8 +6,19 @@ Unit and integration tests for EDB Lasso Reduction PoC
 import unittest
 import tempfile
 import shutil
+import sys
 from pathlib import Path
-from lasso_redact import LassoReductionEngine, DEFAULT_PATTERNS
+
+# Ensure 5_Symbols is on sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT / "5_Symbols"))
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from lasso_redact import LassoReductionEngine, DEFAULT_PATTERNS, create_mock_bundle_tarball
+
+MOCK_BUNDLE_PATH = PROJECT_ROOT / "3_Simulation" / "mock_lasso_bundle"
+if not MOCK_BUNDLE_PATH.exists():
+    MOCK_BUNDLE_PATH = Path("mock_lasso_bundle")
 
 
 class TestLassoReduction(unittest.TestCase):
@@ -45,7 +56,7 @@ class TestLassoReduction(unittest.TestCase):
 
     def test_directory_redaction(self):
         with tempfile.TemporaryDirectory() as tmp_out:
-            manifest = self.engine.redact_directory(Path("mock_lasso_bundle"), Path(tmp_out))
+            manifest = self.engine.redact_directory(MOCK_BUNDLE_PATH, Path(tmp_out))
             self.assertGreater(manifest["total_redactions"], 0)
             self.assertTrue((Path(tmp_out) / "lasso_reduction_manifest.json").exists())
             self.assertTrue((Path(tmp_out) / "postgresql.conf").exists())
@@ -62,7 +73,7 @@ class TestLassoReduction(unittest.TestCase):
             raw_tar = Path(tmp_dir) / "raw.tar.gz"
             out_tar = Path(tmp_dir) / "sanitized.tar.gz"
 
-            create_mock_bundle_tarball(Path("mock_lasso_bundle"), raw_tar)
+            create_mock_bundle_tarball(MOCK_BUNDLE_PATH, raw_tar)
             self.assertTrue(raw_tar.exists())
 
             manifest = self.engine.redact_tarball(raw_tar, out_tar)
@@ -136,7 +147,7 @@ class TestLassoReduction(unittest.TestCase):
             out_dir.mkdir()
             out_tar = out_dir / "sanitized.tar.gz"
 
-            create_mock_bundle_tarball(Path("mock_lasso_bundle"), raw_tar)
+            create_mock_bundle_tarball(MOCK_BUNDLE_PATH, raw_tar)
             self.engine.redact_tarball(raw_tar, out_tar)
 
             self.assertTrue(out_tar.exists())

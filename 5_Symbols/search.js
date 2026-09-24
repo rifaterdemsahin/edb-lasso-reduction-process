@@ -4,49 +4,49 @@ const SEARCH_INDEX = [
   {
     title: "Architecture & Excalidraw Mind Map",
     category: "Architecture",
-    url: "architecture.html",
+    url: "5_Symbols/architecture.html",
     description: "Visual mind map and enterprise debugging session lifecycle between DB teams and EDB Support.",
     keywords: ["architecture", "excalidraw", "mind map", "diagram", "lifecycle", "enterprise debugging", "rca", "session", "edb support", "flow"]
   },
   {
     title: "Create EDB Lasso Tarball (CLI & UI Guide)",
     category: "Guide",
-    url: "create-lasso-tarball.html",
+    url: "5_Symbols/create-lasso-tarball.html",
     description: "How to generate EDB Lasso .tar.gz diagnostic bundle from CLI and UI, expectations, and gotchas.",
     keywords: ["create", "tarball", "tar.gz", "generate", "lasso cli", "expectations", "gotchas", "bloat", "permissions", "offline", "bundle"]
   },
   {
     title: "Stage 01: Ingestion & Unpack",
     category: "Stages",
-    url: "stage-01-ingestion-unpack.html",
+    url: "5_Symbols/stage-01-ingestion-unpack.html",
     description: "Extracts EDB Lasso tarball (.tar.gz) or output directory without altering raw file permissions.",
     keywords: ["stage 1", "unpack", "extract", "tar", "tar.gz", "ingestion", "permissions", "safeguards", "checksum"]
   },
   {
     title: "Stage 02: Credential Stripping",
     category: "Stages",
-    url: "stage-02-credential-stripping.html",
+    url: "5_Symbols/stage-02-credential-stripping.html",
     description: "Identifies and masks passwords in conninfo, MD5 hashes, SCRAM-SHA-256 tokens, API keys, and customer tokens.",
     keywords: ["stage 2", "credentials", "passwords", "conninfo", "md5", "scram", "scram-sha-256", "tokens", "aws", "edb_customer_token", "api_key", "secret"]
   },
   {
     title: "Stage 03: Deterministic IP Mapping",
     category: "Stages",
-    url: "stage-03-deterministic-ip-mapping.html",
+    url: "5_Symbols/stage-03-deterministic-ip-mapping.html",
     description: "Maps internal IP addresses (e.g. 10.0.12.45) to consistent aliases (PSEUDO_IP_NODE_01) preserving cluster topology.",
     keywords: ["stage 3", "ip mapping", "pseudonymization", "network", "pseudo_ip", "subnets", "cluster topology", "replication", "barman", "standby"]
   },
   {
     title: "Stage 04: Audit Manifest & Repack",
     category: "Stages",
-    url: "stage-04-audit-manifest-repack.html",
+    url: "5_Symbols/stage-04-audit-manifest-repack.html",
     description: "Generates lasso_reduction_manifest.json detailing redaction tallies and produces a sanitized archive.",
     keywords: ["stage 4", "manifest", "audit", "repack", "lasso_reduction_manifest.json", "tarball", "compliance", "pci-dss", "soc2"]
   },
   {
     title: "Side-by-Side Comparison",
     category: "Tools",
-    url: "comparison.html",
+    url: "5_Symbols/comparison.html",
     description: "Interactive visual side-by-side diff comparison between raw Lasso artifacts and sanitized outputs.",
     keywords: ["comparison", "side by side", "diff", "before after", "visualizer", "compare", "raw vs redacted"]
   },
@@ -81,7 +81,7 @@ const SEARCH_INDEX = [
   {
     title: "Executive Presentation: Operational SOP (WHY, WHAT, HOW)",
     category: "Presentation",
-    url: "presentation.html",
+    url: "3_Simulation/presentation.html",
     description: "Executive and operational presentation explaining why, what, and how the reduction engine works, with code evolution deep dive.",
     keywords: ["presentation", "sop", "slides", "why", "what", "how", "operational procedure", "code", "architecture"]
   }
@@ -166,7 +166,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     matched.forEach((item, index) => {
       const a = document.createElement('a');
-      a.href = item.url;
+      const isInSubdir = window.location.pathname.includes('/5_Symbols/') || window.location.pathname.includes('/3_Simulation/');
+      let targetUrl = item.url;
+      if (isInSubdir) {
+        if (targetUrl.startsWith('5_Symbols/')) {
+          targetUrl = targetUrl.replace('5_Symbols/', '');
+        } else if (!targetUrl.startsWith('http') && !targetUrl.startsWith('#')) {
+          targetUrl = '../' + targetUrl;
+        }
+      }
+      a.href = targetUrl;
       a.className = "flex items-start justify-between p-3 rounded-xl hover:bg-slate-800 transition group border border-transparent hover:border-slate-700";
       a.innerHTML = `
         <div class="flex items-start space-x-3">
